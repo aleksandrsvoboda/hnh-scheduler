@@ -668,3 +668,113 @@ body {
   color: #9ca3af;
   font-size: 14px;
 }
+
+/* Timeline Layout Styles */
+.grid-container-timeline {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  background: white;
+  max-height: 400px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.time-labels-timeline {
+  width: 80px;
+  background: #f8f9fa;
+  border-right: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.time-label-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  width: 100%;
+}
+
+.hour-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.minute-text {
+  font-size: 10px;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.timeline-container {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  background: white;
+}
+
+.scenario-column-timeline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid #e5e7eb;
+}
+
+.scenario-column-timeline:last-child {
+  border-right: none;
+}
+
+.run-block-timeline {
+  border-radius: 4px;
+  padding: 3px 5px;
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 28px; /* Minimum height to fit readable text */
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
+
+.run-block-timeline:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.run-content-timeline {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.run-time-timeline {
+  font-weight: 600;
+  line-height: 1.1;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.run-duration-timeline {
+  font-size: 8px;
+  opacity: 0.8;
+  line-height: 1.1;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hour-grid-line {
+  pointer-events: none;
+}

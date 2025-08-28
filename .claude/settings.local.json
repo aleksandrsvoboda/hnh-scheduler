@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/C:\\Users\\imbecil\\AppData\\Roaming\\Haven and Hearth/**)",
+      "Bash(npx tsc:*)",
+      "Read(/C:\\Users\\imbecil\\hhautolauncher/**)",
+      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
+      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
+      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
+      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
+      "Bash(npx asar pack:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

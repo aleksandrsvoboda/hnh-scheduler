@@ -377,22 +377,24 @@ export class Scheduler extends EventEmitter {
     
     const upcoming: UpcomingRun[] = [];
     const now = new Date();
+    const maxLookAhead = 48 * 60 * 60 * 1000; // Look ahead 48 hours for recurring runs
 
     for (const [entryId, scheduledJob] of this.jobs) {
       console.log(`Processing job: ${entryId}, type: ${scheduledJob.type}`);
       
       try {
-        let nextRun: Date | null = null;
         let cadenceType = '';
+        const runs: Date[] = [];
 
         // For cron jobs, calculate next execution time
         if (scheduledJob.type === 'cron' && scheduledJob.job) {
-          nextRun = new Date(now.getTime() + 60000); // Next minute as placeholder
+          const nextRun = new Date(now.getTime() + 60000); // Next minute as placeholder
+          runs.push(nextRun);
           cadenceType = 'cron';
           console.log(`Cron job ${entryId} - next run: ${nextRun.toLocaleString()}`);
         }
 
-        // For interval jobs, calculate ACTUAL next run time based on start time
+        // For interval jobs, calculate MULTIPLE future runs
         if (scheduledJob.type === 'interval') {
           const entry = scheduledJob.entry;
           if (entry.cadence.type === 'every') {
@@ -408,43 +410,57 @@ export class Scheduler extends EventEmitter {
               while (nextTime <= now) {
                 nextTime = new Date(nextTime.getTime() + intervalMs);
               }
-              nextRun = nextTime;
               
-              console.log(`${entryId}: Original start ${startTime.toLocaleString()} -> Next run ${nextRun.toLocaleString()}`);
+              // Generate multiple future runs within the look-ahead window
+              const endTime = new Date(now.getTime() + maxLookAhead);
+              while (nextTime <= endTime) {
+                runs.push(new Date(nextTime));
+                nextTime = new Date(nextTime.getTime() + intervalMs);
+              }
+              
+              console.log(`${entryId}: Generated ${runs.length} recurring runs from ${startTime.toLocaleString()}`);
             } else {
-              // No start time - show next interval from now (fallback)
-              nextRun = new Date(now.getTime() + intervalMs);
-              console.log(`${entryId}: No start time, next run from now: ${nextRun.toLocaleString()}`);
+              // No start time - generate runs from now (fallback)
+              let nextTime = new Date(now.getTime() + intervalMs);
+              const endTime = new Date(now.getTime() + maxLookAhead);
+              while (nextTime <= endTime) {
+                runs.push(new Date(nextTime));
+                nextTime = new Date(nextTime.getTime() + intervalMs);
+              }
+              console.log(`${entryId}: Generated ${runs.length} runs from now (no start time)`);
             }
             cadenceType = `every ${entry.cadence.n} ${entry.cadence.unit}`;
           }
         }
 
-        // For timeout jobs (once), we don't show them as upcoming
+        // For timeout jobs (once), only show the single run
         if (scheduledJob.type === 'timeout') {
-          nextRun = new Date(now.getTime() + 30000); // 30 seconds as placeholder
+          const nextRun = new Date(now.getTime() + 30000); // 30 seconds as placeholder
+          runs.push(nextRun);
           cadenceType = 'once';
           console.log(`Timeout job ${entryId} - next run: ${nextRun.toLocaleString()}`);
         }
 
-        if (nextRun) {
+        // Add all calculated runs to the upcoming list
+        runs.forEach((runTime, index) => {
           const upcomingRun = {
-            entryId,
+            entryId: `${entryId}-${index}`, // Make each run unique
             scheduleId: scheduledJob.scheduleId,
             scenarioId: scheduledJob.entry.scenarioId,
             characterId: scheduledJob.entry.characterId,
-            nextRunAt: nextRun.toISOString(), // Keep ISO for API consistency
+            nextRunAt: runTime.toISOString(),
             cadenceType
           };
           upcoming.push(upcomingRun);
-          console.log(`Added upcoming run: ${JSON.stringify(upcomingRun)}`);
-        }
+        });
+
+        console.log(`Added ${runs.length} upcoming runs for ${entryId}`);
       } catch (error) {
         console.warn(`Failed to get upcoming run info for ${entryId}:`, error);
       }
     }
 
-    console.log(`Found ${upcoming.length} upcoming runs`);
+    console.log(`Found ${upcoming.length} total upcoming runs`);
     
     // Sort by next run time and limit results
     const result = upcoming

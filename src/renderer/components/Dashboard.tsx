@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ActiveRun, RunRecord, UpcomingRun, Character, Scenario } from '../types';
+import { ActiveRun, RunRecord, UpcomingRun, Character, Scenario, Schedule } from '../types';
+import ScheduleGrid from './ScheduleGrid';
 
 declare global {
   interface Window {
@@ -11,8 +12,10 @@ const Dashboard: React.FC = () => {
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
   const [recentFailures, setRecentFailures] = useState<RunRecord[]>([]);
   const [upcomingRuns, setUpcomingRuns] = useState<UpcomingRun[]>([]);
+  const [gridUpcomingRuns, setGridUpcomingRuns] = useState<UpcomingRun[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,8 +49,10 @@ const Dashboard: React.FC = () => {
         loadActiveRuns(), 
         loadRecentFailures(), 
         loadUpcomingRuns(),
+        loadGridUpcomingRuns(),
         loadCharacters(),
-        loadScenarios()
+        loadScenarios(),
+        loadSchedules()
       ]);
     } finally {
       setLoading(false);
@@ -71,6 +76,16 @@ const Dashboard: React.FC = () => {
       setScenarios(scenariosList);
     } catch (error) {
       console.error('Failed to load scenarios:', error);
+    }
+  };
+
+  const loadSchedules = async () => {
+    try {
+      if (!window.api) return;
+      const schedulesList = await window.api.schedules.list();
+      setSchedules(schedulesList);
+    } catch (error) {
+      console.error('Failed to load schedules:', error);
     }
   };
 
@@ -104,10 +119,36 @@ const Dashboard: React.FC = () => {
   const loadUpcomingRuns = async () => {
     try {
       if (!window.api) return;
-      const upcoming = await window.api.runs.upcoming(5); // Show top 5
-      setUpcomingRuns(upcoming);
+      const upcoming = await window.api.runs.upcoming(50); // Load more runs to filter from
+      
+      // Filter to show only the next run per scenario
+      const nextRunPerScenario = new Map<number, UpcomingRun>();
+      upcoming.forEach(run => {
+        if (!nextRunPerScenario.has(run.scenarioId)) {
+          nextRunPerScenario.set(run.scenarioId, run);
+        }
+      });
+      
+      // Convert back to array, sort by time, and take top 5
+      const filteredRuns = Array.from(nextRunPerScenario.values())
+        .sort((a, b) => new Date(a.nextRunAt).getTime() - new Date(b.nextRunAt).getTime())
+        .slice(0, 5);
+      
+      setUpcomingRuns(filteredRuns);
     } catch (error) {
       console.error('Failed to load upcoming runs:', error);
+    }
+  };
+
+  const loadGridUpcomingRuns = async () => {
+    try {
+      if (!window.api) return;
+      // Load many more runs for the 24-hour schedule grid
+      // If schedules run every hour, we need 24+ runs per schedule
+      const gridRuns = await window.api.runs.upcoming(500); // Load up to 500 runs
+      setGridUpcomingRuns(gridRuns);
+    } catch (error) {
+      console.error('Failed to load grid upcoming runs:', error);
     }
   };
 
@@ -177,6 +218,14 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <h1 className="mb-4">Dashboard</h1>
+      
+      {/* Schedule Grid */}
+      <ScheduleGrid 
+        upcomingRuns={gridUpcomingRuns} 
+        characters={characters} 
+        scenarios={scenarios}
+        schedules={schedules}
+      />
       
       {/* 1. Upcoming Runs */}
       <div className="mb-6">

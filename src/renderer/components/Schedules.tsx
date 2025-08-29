@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Schedule, ScheduleEntry, Scenario, Character, Cadence, OverlapPolicy } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import InfoTooltip from './InfoTooltip';
 
 // Helper functions to handle datetime-local without any timezone conversion
 const dateToLocalInput = (isoString: string): string => {
@@ -374,7 +375,10 @@ const Schedules: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Concurrency Limit</label>
+                    <label className="form-label">
+                      Concurrency Limit
+                      <InfoTooltip text="Maximum number of runs that can execute simultaneously for this schedule. Leave empty for no limit." />
+                    </label>
                     <input
                       type="number"
                       className="form-input"
@@ -386,9 +390,6 @@ const Schedules: React.FC = () => {
                       min="1"
                       style={{ maxWidth: '200px' }}
                     />
-                    <div className="info-text">
-                      Maximum number of runs that can execute simultaneously for this schedule
-                    </div>
                   </div>
                 </div>
               </div>

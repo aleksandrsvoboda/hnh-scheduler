@@ -16,18 +16,50 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({ text, className = '' }) => {
       const tooltip = tooltipRef.current;
       const container = containerRef.current;
       const containerRect = container.getBoundingClientRect();
-      const tooltipRect = tooltip.getBoundingClientRect();
       
       const windowWidth = window.innerWidth;
-      const rightEdge = tooltipRect.right;
-      const leftEdge = tooltipRect.left;
+      const tooltipWidth = 280; // Our fixed tooltip width
       
-      // Always position tooltip to extend to the left to avoid column constraints
-      setPosition({ 
-        left: 'auto', 
-        right: '0',
-        transform: 'none'
-      });
+      // Check if we're in a table context (has more constrained space)
+      const isInTable = container.closest('table') !== null;
+      
+      if (isInTable) {
+        // In table: always position to the left to avoid column issues
+        setPosition({ 
+          left: 'auto', 
+          right: '0',
+          transform: 'none'
+        });
+      } else {
+        // Outside table: calculate actual available space accounting for sidebar
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarWidth = sidebar ? sidebar.getBoundingClientRect().width : 0;
+        const leftBoundary = sidebarWidth + 20; // sidebar + gap
+        
+        const spaceOnLeft = containerRect.left - leftBoundary;
+        const spaceOnRight = windowWidth - containerRect.right - 20; // window edge buffer
+        
+        if (spaceOnRight >= tooltipWidth) {
+          // Enough space on right - extend rightward
+          setPosition({ 
+            left: '0', 
+            transform: 'none'
+          });
+        } else if (spaceOnLeft >= tooltipWidth) {
+          // Enough space on left - extend leftward  
+          setPosition({ 
+            left: 'auto', 
+            right: '0',
+            transform: 'none'
+          });
+        } else {
+          // Not enough space either way - default to right
+          setPosition({ 
+            left: '0', 
+            transform: 'none'
+          });
+        }
+      }
     }
   }, [isVisible, text]);
 

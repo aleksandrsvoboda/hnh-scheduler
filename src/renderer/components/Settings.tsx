@@ -206,15 +206,16 @@ const Settings: React.FC = () => {
       <div className="flex gap-2 mb-4">
         <h1 className="flex-1">Settings</h1>
         <button 
-          className="btn btn-primary" 
+          className="btn btn-success btn-large" 
           onClick={handleSave}
           disabled={saving}
+          style={{ fontWeight: '600', minWidth: '120px' }}
         >
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? 'Saving...' : '💾 Save Settings'}
         </button>
       </div>
 
-      <div className="max-w-2xl" style={{ maxHeight: '80vh', overflowY: 'auto', paddingRight: '8px' }}>
+      <div className="max-w-2xl">
         {/* Scenarios Information */}
         <div className="mb-6 p-4 border rounded bg-gray-50">
           <h3 className="mb-3">Scenarios</h3>

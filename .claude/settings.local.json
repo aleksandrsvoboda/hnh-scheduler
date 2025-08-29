@@ -8,7 +8,10 @@
       "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
       "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
       "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
-      "Bash(npx asar pack:*)"
+      "Bash(npx asar pack:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx asar extract:*)",
+      "Bash(npx vite:*)"
     ],
     "deny": [],
     "ask": []

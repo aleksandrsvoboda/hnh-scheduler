@@ -15,8 +15,25 @@
   "build": {
     "appId": "com.example.hnhscheduler",
     "files": [
-      "dist/**/*",
-      "package.json"
+      "dist/main/**/*",
+      "dist/renderer/**/*", 
+      "dist/preload/**/*",
+      "package.json",
+      "!dist/win-unpacked/**/*",
+      "!dist/*.exe",
+      "!dist/*.7z",
+      "!dist/*.yml",
+      "!dist/*.yaml",
+      "!dist/*.blockmap",
+      "!**/*.map",
+      "!**/node_modules/*/.cache/**/*",
+      "!src/**/*",
+      "!tsconfig.json",
+      "!vite.config.ts",
+      "!.git/**/*",
+      "!.gitignore",
+      "!README.md",
+      "!CLAUDE.md"
     ],
     "asar": true,
     "directories": {

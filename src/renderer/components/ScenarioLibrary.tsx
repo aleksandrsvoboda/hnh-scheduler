@@ -110,12 +110,12 @@ const ScenarioLibrary: React.FC = () => {
           <p className="text-muted mb-4">{scenarios.length} scenario(s) loaded</p>
           
           <div>
-            <table className="table">
+            <table className="table" style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Steps</th>
+                <th style={{ width: '80px' }}>ID</th>
+                <th style={{ width: '200px', paddingRight: '400px' }}>Name</th>
+                <th style={{ width: 'auto' }}>Steps</th>
               </tr>
             </thead>
             <tbody>

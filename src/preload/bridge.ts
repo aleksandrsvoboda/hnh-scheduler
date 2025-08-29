@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { Config, Scenario, Character, CredentialRef, Schedule, ActiveRun, HistoryFilter, RunRecord, UpcomingRun } from '../main/types';
 
-console.log('Preload script is executing...');
 
 // Define the API surface that will be exposed to the renderer
 const api = {
@@ -107,7 +106,6 @@ const api = {
 // Expose the API to the renderer process
 try {
   contextBridge.exposeInMainWorld('api', api);
-  console.log('Successfully exposed API to main world');
 } catch (error) {
   console.error('Failed to expose API to main world:', error);
 }

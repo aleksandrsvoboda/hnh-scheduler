@@ -27,16 +27,13 @@ class HnHSchedulerApp {
   async initialize(): Promise<void> {
     try {
       // 1. Load config and resolve data paths
-      console.log('Loading configuration...');
       this.configStore = new ConfigStore();
       await this.configStore.load();
       const config = this.configStore.get();
 
       const dataDir = config.dataDir || app.getPath('userData');
-      console.log(`Using data directory: ${dataDir}`);
 
       // 2. Load credentials, characters, and schedules
-      console.log('Loading stores...');
       this.credentialsStore = new CredentialsStore(dataDir);
       await this.credentialsStore.load();
 
@@ -47,12 +44,10 @@ class HnHSchedulerApp {
       await this.schedulesStore.load();
 
       // 3. Load scenarios (watch for changes)
-      console.log('Loading scenario catalog...');
       this.scenarioCatalog = new ScenarioCatalog();
       await this.scenarioCatalog.initialize();
 
       // 4. Initialize services
-      console.log('Initializing services...');
       this.credentialVault = new CredentialVault();
       this.processManager = new ProcessManager(this.credentialVault, () => this.configStore.get());
       this.runHistory = new RunHistory(dataDir);
@@ -74,14 +69,12 @@ class HnHSchedulerApp {
       );
 
       // 6. Register schedules
-      console.log('Registering schedules...');
       const schedules = this.schedulesStore.getEnabledSchedules();
       this.scheduler.registerSchedules(schedules);
 
       // 7. Set up event handlers
       this.setupEventHandlers();
 
-      console.log('Application initialized successfully');
     } catch (error) {
       console.error('Failed to initialize application:', error);
       throw error;
@@ -100,7 +93,6 @@ class HnHSchedulerApp {
         // Notify scheduler
         this.scheduler.onRunCompleted(runId, record.entryId);
         
-        console.log(`Run ${runId} completed with status: ${record.status}`);
       } catch (error) {
         console.error(`Failed to handle run exit for ${runId}:`, error);
       }
@@ -140,32 +132,23 @@ class HnHSchedulerApp {
   }
 
   async createMainWindow(): Promise<void> {
-    console.log('=== CREATING MAIN WINDOW ===');
     const preloadPath = path.resolve(__dirname, '../preload/bridge.js');
-    console.log('=== PRELOAD DEBUG ===');
-    console.log('Current __dirname:', __dirname);
-    console.log('Preload script path:', preloadPath);
     
     // Check if preload file exists
     try {
       const fs = require('fs');
       if (fs.existsSync(preloadPath)) {
-        console.log('✓ Preload script exists');
       } else {
         console.error('✗ Preload script does not exist at:', preloadPath);
         // Try alternative path
         const altPath = path.resolve(__dirname, '../../dist/preload/bridge.js');
-        console.log('Trying alternative path:', altPath);
         if (fs.existsSync(altPath)) {
-          console.log('✓ Found preload at alternative path');
         }
       }
     } catch (error) {
       console.error('Error checking preload script:', error);
     }
-    console.log('=== END PRELOAD DEBUG ===');
 
-    console.log('Creating BrowserWindow...');
     
     // Resolve icon path for both development and production
     const iconPath = app.isPackaged 
@@ -183,7 +166,6 @@ class HnHSchedulerApp {
       },
       show: false, // Show after ready
     });
-    console.log('BrowserWindow created successfully');
 
     // Set up IPC event forwarding
     if (this.ipcManager && this.mainWindow.webContents) {
@@ -191,18 +173,14 @@ class HnHSchedulerApp {
     }
 
     // Load the renderer
-    console.log('Loading renderer...');
     if (app.isPackaged) {
       // Production: load from built files inside asar
-      console.log('Loading from built files (production)');
       
       // For asar-packaged apps, use path relative to asar root
       const rendererPath = path.join(__dirname, '../renderer/index.html');
-      console.log('Loading renderer from asar path:', rendererPath);
       
       try {
         await this.mainWindow.loadFile(rendererPath);
-        console.log('Successfully loaded renderer from asar');
       } catch (error) {
         console.error('Failed to load renderer from asar:', error);
         // Fallback: try loading a simple HTML string
@@ -210,21 +188,17 @@ class HnHSchedulerApp {
       }
     } else {
       // Development: load from Vite dev server
-      console.log('Loading from Vite dev server (development)');
       await this.mainWindow.loadURL('http://localhost:3000');
       this.mainWindow.webContents.openDevTools();
     }
-    console.log('Renderer loaded successfully');
 
     // Show window immediately in development for debugging
     if (!app.isPackaged) {
-      console.log('Development mode - showing window immediately');
       this.mainWindow.show();
       this.mainWindow.focus();
     }
 
     this.mainWindow.once('ready-to-show', () => {
-      console.log('Window ready to show - showing and focusing');
       if (app.isPackaged) {
         this.mainWindow?.show();
         this.mainWindow?.focus();
@@ -232,13 +206,10 @@ class HnHSchedulerApp {
     });
 
     this.mainWindow.on('close', (event) => {
-      console.log('Main window is being closed');
       // Allow normal close behavior - quit the app when window closes
-      console.log('Allowing window close - app will quit');
     });
 
     this.mainWindow.on('closed', () => {
-      console.log('Main window closed');
       this.mainWindow = undefined;
     });
 
@@ -247,12 +218,10 @@ class HnHSchedulerApp {
     });
 
     this.mainWindow.webContents.on('did-finish-load', () => {
-      console.log('Renderer finished loading');
     });
   }
 
   async cleanup(): Promise<void> {
-    console.log('Cleaning up application...');
     
     try {
       // Stop scheduler
@@ -277,7 +246,6 @@ class HnHSchedulerApp {
         }
       }
 
-      console.log('Application cleanup completed');
     } catch (error) {
       console.error('Error during cleanup:', error);
     }

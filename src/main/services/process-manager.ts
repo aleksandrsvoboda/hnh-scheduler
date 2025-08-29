@@ -218,7 +218,6 @@ export class ProcessManager extends EventEmitter {
 
   private setupTimeout(run: ProcessRun): void {
     run.timeout = setTimeout(() => {
-      console.log(`Run ${run.runId} reached max duration, sending SIGINT`);
       
       try {
         run.process.kill('SIGINT');
@@ -226,7 +225,6 @@ export class ProcessManager extends EventEmitter {
         
         // Force kill after 10 seconds
         run.gracefulTimeout = setTimeout(() => {
-          console.log(`Run ${run.runId} force killing after graceful timeout`);
           this.forceKillProcess(run);
           this.emit('run:timeout', { runId: run.runId, stage: 'force' });
         }, 10000);

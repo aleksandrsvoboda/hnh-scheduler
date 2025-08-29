@@ -11,8 +11,6 @@ const dateToLocalInput = (isoString: string): string => {
 };
 
 const localInputToISO = (localValue: string): string => {
-  // SIMPLE: You select 23:58, we store 23:58. No conversions.
-  console.log('Storing time as selected:', localValue);
   // Just store the local datetime string directly - no ISO conversion
   return localValue + ':00.000Z';
 };
@@ -536,7 +534,7 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
   // Auto-fix invalid character ID
   useEffect(() => {
     if (characters.length > 0 && !character && entry.characterId) {
-      console.log('Invalid character ID detected, auto-fixing:', entry.characterId);
+
       onUpdate({ characterId: characters[0].id });
     }
   }, [characters, character, entry.characterId, onUpdate]);

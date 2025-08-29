@@ -86,16 +86,13 @@ export class Scheduler extends EventEmitter {
 
       case 'every': {
         const intervalMs = this.calculateInterval(cadence.unit, cadence.n);
-        console.log(`Setting up interval for entry ${entry.id}: every ${cadence.n} ${cadence.unit} = ${intervalMs}ms`);
-        
+
         // Check if there's a start time
         if ((cadence as any).startTimeISO) {
           const startTimeStr = (cadence as any).startTimeISO.replace('Z', '');
           const startTime = new Date(startTimeStr);
           const now = new Date();
-          
-          console.log(`Start time: ${startTime.toLocaleString()}, Now: ${now.toLocaleString()}`);
-          
+
           // Calculate delay to first execution based on original start time
           let nextExecutionTime = new Date(startTime);
           
@@ -105,19 +102,14 @@ export class Scheduler extends EventEmitter {
           }
           
           const firstDelay = nextExecutionTime.getTime() - now.getTime();
-          
-          console.log(`Original start time: ${startTime.toLocaleString()}`);
-          console.log(`Next execution time: ${nextExecutionTime.toLocaleString()}`);
-          console.log(`First execution in ${firstDelay}ms (${Math.round(firstDelay/1000)}s)`);
+
           
           // Set timeout for first execution, then start interval
           const timeoutId = setTimeout(() => {
-            console.log(`FIRST EXECUTION - Interval callback fired for entry ${entry.id}`);
             triggerRun();
             
             // Now start the regular interval
             const intervalId = setInterval(() => {
-              console.log(`RECURRING - Interval callback fired for entry ${entry.id}`);
               triggerRun();
             }, intervalMs);
             
@@ -128,16 +120,14 @@ export class Scheduler extends EventEmitter {
             }
           }, firstDelay);
           
-          console.log(`Timeout created with ID: ${timeoutId}`);
+
           return { job: timeoutId, type: 'interval' };
         } else {
           // No start time - use regular interval from now
           const intervalId = setInterval(() => {
-            console.log(`Interval callback fired for entry ${entry.id} (every ${cadence.n} ${cadence.unit})`);
             triggerRun();
           }, intervalMs);
           
-          console.log(`Interval created with ID: ${intervalId}`);
           return { job: intervalId, type: 'interval' };
         }
       }
@@ -173,13 +163,9 @@ export class Scheduler extends EventEmitter {
   }
 
   private handleTrigger(schedule: Schedule, entry: ScheduleEntry): void {
-    console.log(`=== TRIGGER FIRED for entry ${entry.id} ===`);
-    console.log(`Schedule: ${schedule.name}, Entry: scenario ${entry.scenarioId}, character ${entry.characterId}`);
-    
     // Check if this run is manually skipped
     if (this.isRunSkipped(schedule.id, entry.id)) {
-      console.log(`Run ${schedule.id}/${entry.id} is manually skipped`);
-      this.emit('run:skipped', { 
+      this.emit('run:skipped', {
         scheduleId: schedule.id,
         entryId: entry.id, 
         reason: 'manual-skip',
@@ -198,7 +184,6 @@ export class Scheduler extends EventEmitter {
       const totalActiveRuns = this.getTotalActiveRuns();
       
       if (totalActiveRuns >= globalLimit) {
-        console.log(`Global concurrency limit (${globalLimit}) reached, queueing entry ${entry.id}`);
         this.queueRun(entry);
         return;
       }
@@ -207,7 +192,6 @@ export class Scheduler extends EventEmitter {
       if (schedule.concurrencyLimit) {
         const scheduleActiveRuns = this.scheduleRunCounts.get(schedule.id) || 0;
         if (scheduleActiveRuns >= schedule.concurrencyLimit) {
-          console.log(`Schedule concurrency limit (${schedule.concurrencyLimit}) reached for ${schedule.id}, handling overlap policy`);
           this.handleScheduleOverlap(schedule, entry);
           return;
         }
@@ -222,7 +206,6 @@ export class Scheduler extends EventEmitter {
         this.startRun(schedule.id, entry);
       }
     } catch (error) {
-      console.error(`Error handling trigger for entry ${entry.id}:`, error);
       this.emit('trigger:error', { entryId: entry.id, error });
     }
   }
@@ -230,17 +213,14 @@ export class Scheduler extends EventEmitter {
   private handleCharacterOverlap(schedule: Schedule, entry: ScheduleEntry): void {
     switch (entry.overlapPolicy) {
       case 'skip':
-        console.log(`Character ${entry.characterId} busy, skipping entry ${entry.id}`);
         this.emit('run:skipped', { entryId: entry.id, reason: 'character-busy' });
         break;
 
       case 'queue':
-        console.log(`Character ${entry.characterId} busy, queueing entry ${entry.id}`);
         this.queueRun(entry);
         break;
 
       case 'kill-previous':
-        console.log(`Character ${entry.characterId} busy, killing previous run for entry ${entry.id}`);
         this.killPreviousRun(entry.characterId);
         this.startRun(schedule.id, entry);
         break;
@@ -389,16 +369,13 @@ export class Scheduler extends EventEmitter {
   }
 
   getUpcomingRuns(limit: number = 10): UpcomingRun[] {
-    console.log('=== Getting upcoming runs ===');
-    console.log(`Total registered jobs: ${this.jobs.size}`);
-    
+
     const upcoming: UpcomingRun[] = [];
     const now = new Date();
     const maxLookAhead = 48 * 60 * 60 * 1000; // Look ahead 48 hours for recurring runs
 
     for (const [entryId, scheduledJob] of this.jobs) {
-      console.log(`Processing job: ${entryId}, type: ${scheduledJob.type}`);
-      
+
       try {
         let cadenceType = '';
         const runs: Date[] = [];
@@ -408,7 +385,6 @@ export class Scheduler extends EventEmitter {
           const nextRun = new Date(now.getTime() + 60000); // Next minute as placeholder
           runs.push(nextRun);
           cadenceType = 'cron';
-          console.log(`Cron job ${entryId} - next run: ${nextRun.toLocaleString()}`);
         }
 
         // For interval jobs, calculate MULTIPLE future runs
@@ -434,8 +410,6 @@ export class Scheduler extends EventEmitter {
                 runs.push(new Date(nextTime));
                 nextTime = new Date(nextTime.getTime() + intervalMs);
               }
-              
-              console.log(`${entryId}: Generated ${runs.length} recurring runs from ${startTime.toLocaleString()}`);
             } else {
               // No start time - generate runs from now (fallback)
               let nextTime = new Date(now.getTime() + intervalMs);
@@ -444,7 +418,6 @@ export class Scheduler extends EventEmitter {
                 runs.push(new Date(nextTime));
                 nextTime = new Date(nextTime.getTime() + intervalMs);
               }
-              console.log(`${entryId}: Generated ${runs.length} runs from now (no start time)`);
             }
             cadenceType = `every ${entry.cadence.n} ${entry.cadence.unit}`;
           }
@@ -455,7 +428,6 @@ export class Scheduler extends EventEmitter {
           const nextRun = new Date(now.getTime() + 30000); // 30 seconds as placeholder
           runs.push(nextRun);
           cadenceType = 'once';
-          console.log(`Timeout job ${entryId} - next run: ${nextRun.toLocaleString()}`);
         }
 
         // Add all calculated runs to the upcoming list
@@ -470,21 +442,15 @@ export class Scheduler extends EventEmitter {
           };
           upcoming.push(upcomingRun);
         });
-
-        console.log(`Added ${runs.length} upcoming runs for ${entryId}`);
       } catch (error) {
         console.warn(`Failed to get upcoming run info for ${entryId}:`, error);
       }
     }
-
-    console.log(`Found ${upcoming.length} total upcoming runs`);
     
     // Sort by next run time and limit results
     const result = upcoming
       .sort((a, b) => new Date(a.nextRunAt).getTime() - new Date(b.nextRunAt).getTime())
       .slice(0, limit);
-      
-    console.log('=== End upcoming runs ===');
     return result;
   }
 
@@ -492,13 +458,11 @@ export class Scheduler extends EventEmitter {
   async setRunSkipped(scheduleId: string, entryId: string): Promise<void> {
     const skipKey = `${scheduleId}-${entryId}`;
     this.skippedRuns.add(skipKey);
-    console.log(`Run ${scheduleId}/${entryId} marked as skipped`);
   }
 
   async clearRunSkipped(scheduleId: string, entryId: string): Promise<void> {
     const skipKey = `${scheduleId}-${entryId}`;
     this.skippedRuns.delete(skipKey);
-    console.log(`Run ${scheduleId}/${entryId} skip cleared`);
   }
 
   async getSkippedRuns(): Promise<string[]> {

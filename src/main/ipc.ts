@@ -355,14 +355,6 @@ export class IPCManager {
           const scenario = this.scenarioCatalog.findById(data.scenarioId);
           const character = this.charactersStore.findById(data.characterId);
           
-          console.log('Skip recording debug:', {
-            scenarioId: data.scenarioId,
-            characterId: data.characterId,
-            scenarioFound: !!scenario,
-            characterFound: !!character,
-            scenarioName: scenario?.name,
-            characterName: character?.name
-          });
           
           if (scenario && character) {
             const skipRecord: RunRecord = {
@@ -377,7 +369,6 @@ export class IPCManager {
             };
             
             await this.runHistory.appendRecord(skipRecord);
-            console.log(`Recorded manual skip for ${character.name}/${scenario.name}`);
           } else {
             console.error('Failed to find scenario or character for skip record:', {
               scenarioId: data.scenarioId,

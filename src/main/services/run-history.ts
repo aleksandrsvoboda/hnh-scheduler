@@ -98,7 +98,6 @@ export class RunHistory extends EventEmitter {
       for (const file of filesToDelete) {
         const filePath = path.join(this.historyDir, file);
         await fs.unlink(filePath);
-        console.log(`Pruned old history file: ${file}`);
       }
 
       if (filesToDelete.length > 0) {

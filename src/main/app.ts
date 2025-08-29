@@ -166,9 +166,16 @@ class HnHSchedulerApp {
     console.log('=== END PRELOAD DEBUG ===');
 
     console.log('Creating BrowserWindow...');
+    
+    // Resolve icon path for both development and production
+    const iconPath = app.isPackaged 
+      ? path.join(process.resourcesPath, 'icon.png')
+      : path.join(__dirname, '../../icon.png');
+    
     this.mainWindow = new BrowserWindow({
       width: 1200,
       height: 800,
+      icon: iconPath,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,

@@ -842,3 +842,46 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(20px);
 }
+
+/* InfoTooltip Component Styles */
+.info-tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 4px;
+  cursor: help;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background-color: #6b7280;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.info-icon:hover {
+  background-color: #4b5563;
+}
+
+.tooltip-content {
+  position: absolute;
+  top: -8px;
+  transform: translateY(-100%);
+  background-color: #1f2937;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
+}

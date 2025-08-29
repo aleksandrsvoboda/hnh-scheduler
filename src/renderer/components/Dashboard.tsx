@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ActiveRun, RunRecord, UpcomingRun, Character, Scenario, Schedule } from '../types';
 import ScheduleGrid from './ScheduleGrid';
+import InfoTooltip from './InfoTooltip';
 
 declare global {
   interface Window {
@@ -281,7 +282,10 @@ const Dashboard: React.FC = () => {
                 <th>Character</th>
                 <th>Next Run</th>
                 <th>Type</th>
-                <th>Skip Next Run</th>
+                <th>
+                  Skip
+                  <InfoTooltip text="Toggle to skip the next occurrence of this scheduled run" />
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -294,10 +298,7 @@ const Dashboard: React.FC = () => {
                     <span className="status status-info">{run.cadenceType}</span>
                   </td>
                   <td>
-                    <label 
-                      className="toggle-switch skip-toggle"
-                      title="Toggle to skip the next occurrence of this scheduled run"
-                    >
+                    <label className="toggle-switch skip-toggle">
                       <input 
                         type="checkbox" 
                         data-skip-key={`${run.scheduleId}-${run.entryId}`}

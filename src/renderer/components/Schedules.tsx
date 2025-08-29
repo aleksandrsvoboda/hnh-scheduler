@@ -320,7 +320,7 @@ const Schedules: React.FC = () => {
                               handleToggleSchedule(schedule.id, e.target.checked);
                             }}
                           />
-                          <span className="toggle-slider"></span>
+                          <span className="slider"></span>
                         </label>
                         <button
                           className="btn btn-danger btn-small"
@@ -776,7 +776,7 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
                   checked={entry.enabled}
                   onChange={(e) => onUpdate({ enabled: e.target.checked })}
                 />
-                <span className="toggle-slider"></span>
+                <span className="slider"></span>
               </div>
               <span className="form-label" style={{ margin: 0 }}>Scenario Enabled</span>
             </label>

@@ -23,6 +23,7 @@ export class Scheduler extends EventEmitter {
   private characterLocks = new Map<string, string>(); // characterId -> runId
   private characterQueues = new Map<string, QueuedRun[]>();
   private scheduleRunCounts = new Map<string, number>();
+  private skippedRuns = new Set<string>(); // Set of "scheduleId-entryId" strings
 
   constructor() {
     super();
@@ -174,6 +175,22 @@ export class Scheduler extends EventEmitter {
   private handleTrigger(schedule: Schedule, entry: ScheduleEntry): void {
     console.log(`=== TRIGGER FIRED for entry ${entry.id} ===`);
     console.log(`Schedule: ${schedule.name}, Entry: scenario ${entry.scenarioId}, character ${entry.characterId}`);
+    
+    // Check if this run is manually skipped
+    if (this.isRunSkipped(schedule.id, entry.id)) {
+      console.log(`Run ${schedule.id}/${entry.id} is manually skipped`);
+      this.emit('run:skipped', { 
+        scheduleId: schedule.id,
+        entryId: entry.id, 
+        reason: 'manual-skip',
+        scenarioId: entry.scenarioId,
+        characterId: entry.characterId
+      });
+      
+      // Clear the skip after processing (one-time skip)
+      this.skippedRuns.delete(`${schedule.id}-${entry.id}`);
+      return;
+    }
     
     try {
       // Check global concurrency limit
@@ -469,5 +486,27 @@ export class Scheduler extends EventEmitter {
       
     console.log('=== End upcoming runs ===');
     return result;
+  }
+
+  // Skip functionality methods
+  async setRunSkipped(scheduleId: string, entryId: string): Promise<void> {
+    const skipKey = `${scheduleId}-${entryId}`;
+    this.skippedRuns.add(skipKey);
+    console.log(`Run ${scheduleId}/${entryId} marked as skipped`);
+  }
+
+  async clearRunSkipped(scheduleId: string, entryId: string): Promise<void> {
+    const skipKey = `${scheduleId}-${entryId}`;
+    this.skippedRuns.delete(skipKey);
+    console.log(`Run ${scheduleId}/${entryId} skip cleared`);
+  }
+
+  async getSkippedRuns(): Promise<string[]> {
+    return Array.from(this.skippedRuns);
+  }
+
+  private isRunSkipped(scheduleId: string, entryId: string): boolean {
+    const skipKey = `${scheduleId}-${entryId}`;
+    return this.skippedRuns.has(skipKey);
   }
 }

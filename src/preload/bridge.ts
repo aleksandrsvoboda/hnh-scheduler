@@ -90,6 +90,13 @@ const api = {
   history: {
     query: (filter?: HistoryFilter): Promise<RunRecord[]> => ipcRenderer.invoke('history:query', filter || {}),
   },
+
+  // Skip functionality  
+  skip: {
+    set: (scheduleId: string, entryId: string): Promise<void> => ipcRenderer.invoke('skip:set', scheduleId, entryId),
+    clear: (scheduleId: string, entryId: string): Promise<void> => ipcRenderer.invoke('skip:clear', scheduleId, entryId),
+    list: (): Promise<string[]> => ipcRenderer.invoke('skip:list'),
+  },
 };
 
 // Expose the API to the renderer process

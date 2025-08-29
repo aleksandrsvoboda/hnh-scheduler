@@ -278,6 +278,19 @@ export class IPCManager {
     ipcMain.handle('history:query', async (_, filter: HistoryFilter) => {
       return await this.runHistory.query(filter);
     });
+
+    // Skip functionality
+    ipcMain.handle('skip:set', async (_, scheduleId: string, entryId: string) => {
+      return await this.scheduler.setRunSkipped(scheduleId, entryId);
+    });
+
+    ipcMain.handle('skip:clear', async (_, scheduleId: string, entryId: string) => {
+      return await this.scheduler.clearRunSkipped(scheduleId, entryId);
+    });
+
+    ipcMain.handle('skip:list', async () => {
+      return await this.scheduler.getSkippedRuns();
+    });
   }
 
   setupEventForwarding(webContents: Electron.WebContents): void {
@@ -327,6 +340,35 @@ export class IPCManager {
         await this.processManager.stopRun(data.runId);
       } catch (error) {
         console.error('Failed to kill run:', error);
+      }
+    });
+
+    // Handle manual skips - record them in history
+    this.scheduler.on('run:skipped', async (data) => {
+      try {
+        if (data.reason === 'manual-skip') {
+          const scenario = this.scenarioCatalog.findById(data.scenarioId);
+          const character = this.charactersStore.findById(data.characterId);
+          
+          if (scenario && character) {
+            const skipRecord: RunRecord = {
+              runId: `skip-${data.scheduleId}-${data.entryId}-${Date.now()}`,
+              scheduleId: data.scheduleId,
+              entryId: data.entryId,
+              scenario: { id: scenario.id, name: scenario.name },
+              character: { id: character.id, name: character.name },
+              ts: new Date().toISOString(),
+              status: 'skipped',
+              duration: 0,
+              reason: 'Manual skip'
+            };
+            
+            await this.runHistory.appendRecord(skipRecord);
+            console.log(`Recorded manual skip for ${character.name}/${scenario.name}`);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to record manual skip:', error);
       }
     });
   }

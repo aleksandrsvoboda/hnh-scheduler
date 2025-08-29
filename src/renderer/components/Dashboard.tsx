@@ -16,6 +16,7 @@ const Dashboard: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [skippedRuns, setSkippedRuns] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +53,8 @@ const Dashboard: React.FC = () => {
         loadGridUpcomingRuns(),
         loadCharacters(),
         loadScenarios(),
-        loadSchedules()
+        loadSchedules(),
+        loadSkippedRuns()
       ]);
     } finally {
       setLoading(false);
@@ -66,6 +68,16 @@ const Dashboard: React.FC = () => {
       setCharacters(charactersList);
     } catch (error) {
       console.error('Failed to load characters:', error);
+    }
+  };
+
+  const loadSkippedRuns = async () => {
+    try {
+      if (!window.api) return;
+      const skippedList = await window.api.skip.list();
+      setSkippedRuns(new Set(skippedList));
+    } catch (error) {
+      console.error('Failed to load skipped runs:', error);
     }
   };
 
@@ -190,6 +202,31 @@ const Dashboard: React.FC = () => {
     return scenario?.name || `Scenario ${scenarioId}`;
   };
 
+  const handleSkipToggle = async (scheduleId: string, entryId: string, isSkipped: boolean) => {
+    try {
+      const skipKey = `${scheduleId}-${entryId}`;
+      
+      if (isSkipped) {
+        await window.api.skip.set(scheduleId, entryId);
+        setSkippedRuns(prev => new Set(prev).add(skipKey));
+      } else {
+        await window.api.skip.clear(scheduleId, entryId);
+        setSkippedRuns(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(skipKey);
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle skip:', error);
+      // Revert the checkbox state on error
+      const checkbox = document.querySelector(`input[data-skip-key="${scheduleId}-${entryId}"]`) as HTMLInputElement;
+      if (checkbox) {
+        checkbox.checked = !isSkipped;
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center mt-4">
@@ -240,6 +277,7 @@ const Dashboard: React.FC = () => {
                 <th>Character</th>
                 <th>Next Run</th>
                 <th>Type</th>
+                <th>Skip</th>
               </tr>
             </thead>
             <tbody>
@@ -250,6 +288,17 @@ const Dashboard: React.FC = () => {
                   <td>{formatDateTime(run.nextRunAt)}</td>
                   <td>
                     <span className="status status-info">{run.cadenceType}</span>
+                  </td>
+                  <td>
+                    <label className="toggle-switch skip-toggle">
+                      <input 
+                        type="checkbox" 
+                        data-skip-key={`${run.scheduleId}-${run.entryId}`}
+                        checked={skippedRuns.has(`${run.scheduleId}-${run.entryId}`)}
+                        onChange={(e) => handleSkipToggle(run.scheduleId, run.entryId, e.target.checked)}
+                      />
+                      <span className="slider"></span>
+                    </label>
                   </td>
                 </tr>
               ))}

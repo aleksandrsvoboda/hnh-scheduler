@@ -57,6 +57,14 @@ const ScenarioLibrary: React.FC = () => {
     });
   };
 
+  const expandAll = () => {
+    setExpandedScenarios(new Set(scenarios.map(s => s.id)));
+  };
+
+  const collapseAll = () => {
+    setExpandedScenarios(new Set());
+  };
+
   if (loading) {
     return (
       <div className="text-center mt-4">
@@ -70,6 +78,12 @@ const ScenarioLibrary: React.FC = () => {
     <div>
       <div className="flex gap-2 mb-4">
         <h1 className="flex-1">Scenario Library</h1>
+        <button className="btn btn-outline btn-small" onClick={expandAll}>
+          Expand All
+        </button>
+        <button className="btn btn-outline btn-small" onClick={collapseAll}>
+          Collapse All
+        </button>
         <button className="btn btn-secondary" onClick={handleReload}>
           Reload
         </button>
@@ -121,7 +135,13 @@ const ScenarioLibrary: React.FC = () => {
                         <strong>{scenario.name}</strong>
                       </td>
                       <td style={{ verticalAlign: 'top' }}>
-                        <span>{scenario.steps.length} step(s)</span>
+                        <button 
+                          className="btn btn-outline btn-small"
+                          onClick={() => toggleScenario(scenario.id)}
+                          style={{ padding: '2px 8px', fontSize: '12px' }}
+                        >
+                          {isExpanded ? '▼' : '▶'} {scenario.steps.length} step(s)
+                        </button>
                       </td>
                       <td>
                         <div>

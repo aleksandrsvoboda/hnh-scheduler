@@ -246,11 +246,12 @@ const Schedules: React.FC = () => {
       <div className="flex gap-2 mb-4">
         <h1 className="flex-1">Schedules</h1>
         <button 
-          className="btn btn-primary" 
+          className="btn btn-success btn-large" 
           onClick={handleSave}
           disabled={saving}
+          style={{ fontWeight: '600', minWidth: '120px' }}
         >
-          {saving ? 'Saving...' : 'Save All'}
+          {saving ? 'Saving...' : '💾 Save All'}
         </button>
       </div>
 
@@ -569,8 +570,8 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
         </button>
         
         <div className="button-group">
-          <button className="btn btn-secondary btn-small" onClick={onTest}>
-            Test
+          <button className="btn btn-info btn-small" onClick={onTest}>
+            ▶ Test
           </button>
           <button className="btn btn-danger btn-small" onClick={onDelete}>
             Delete

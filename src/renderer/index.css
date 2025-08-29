@@ -94,6 +94,45 @@ body {
   background-color: #2980b9;
 }
 
+.btn-success {
+  background-color: #27ae60;
+  border-color: #27ae60;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #229954;
+  border-color: #229954;
+}
+
+.btn-large {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+  background-color: #f9fafb;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.btn-info {
+  background-color: #3498db;
+  border-color: #3498db;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
 .btn-secondary {
   background-color: #95a5a6;
   color: white;

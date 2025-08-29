@@ -281,7 +281,7 @@ const Dashboard: React.FC = () => {
                 <th>Character</th>
                 <th>Next Run</th>
                 <th>Type</th>
-                <th>Skip</th>
+                <th>Skip Next Run</th>
               </tr>
             </thead>
             <tbody>
@@ -294,7 +294,10 @@ const Dashboard: React.FC = () => {
                     <span className="status status-info">{run.cadenceType}</span>
                   </td>
                   <td>
-                    <label className="toggle-switch skip-toggle">
+                    <label 
+                      className="toggle-switch skip-toggle"
+                      title="Toggle to skip the next occurrence of this scheduled run"
+                    >
                       <input 
                         type="checkbox" 
                         data-skip-key={`${run.scheduleId}-${run.entryId}`}

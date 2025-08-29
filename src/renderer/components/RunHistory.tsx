@@ -219,7 +219,6 @@ const RunHistory: React.FC = () => {
                     <th>Status</th>
                     <th>Duration</th>
                     <th>Exit Code</th>
-                    <th>Error</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -239,18 +238,6 @@ const RunHistory: React.FC = () => {
                           <code>{record.exitCode}</code>
                         ) : record.signal ? (
                           <code>{record.signal}</code>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td>
-                        {record.error ? (
-                          <span className="text-error" title={record.error}>
-                            {record.error.length > 50 ? 
-                              `${record.error.substring(0, 50)}...` : 
-                              record.error
-                            }
-                          </span>
                         ) : (
                           '-'
                         )}

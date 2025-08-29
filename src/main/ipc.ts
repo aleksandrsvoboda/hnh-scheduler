@@ -8,7 +8,7 @@ import { CredentialVault } from './services/credential-vault';
 import { ProcessManager } from './services/process-manager';
 import { RunHistory } from './services/run-history';
 import { Scheduler } from './services/scheduler';
-import { Config, Schedule, Character, CredentialRef, HistoryFilter } from './types';
+import { Config, Schedule, Character, CredentialRef, HistoryFilter, RunRecord } from './types';
 
 export class IPCManager {
   constructor(
@@ -371,12 +371,9 @@ export class IPCManager {
               entryId: data.entryId,
               scenarioId: scenario.id,
               characterId: character.id,
-              scenario: { id: scenario.id, name: scenario.name },
-              character: { id: character.id, name: character.name },
               ts: new Date().toISOString(),
               status: 'skipped',
-              durationMs: 0,
-              reason: 'Manual skip'
+              durationMs: 0
             };
             
             await this.runHistory.appendRecord(skipRecord);

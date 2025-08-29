@@ -86,7 +86,7 @@ export interface RunRecord {
   scheduleId: string;
   scenarioId: number;
   characterId: string;
-  status: "success" | "error" | "timeout" | "killed";
+  status: "success" | "error" | "timeout" | "killed" | "skipped";
   exitCode?: number;
   signal?: string;
   durationMs: number;

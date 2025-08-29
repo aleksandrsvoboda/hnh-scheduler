@@ -274,6 +274,11 @@ body {
   color: #0c5460;
 }
 
+.status-skipped {
+  background-color: #f3e8ff;
+  color: #6b46c1;
+}
+
 /* Loading spinner */
 .spinner {
   display: inline-block;

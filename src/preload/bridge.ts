@@ -84,6 +84,11 @@ const api = {
       ipcRenderer.on('run:output', handler);
       return () => ipcRenderer.removeListener('run:output', handler);
     },
+    onSkipped: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('run:skipped', handler);
+      return () => ipcRenderer.removeListener('run:skipped', handler);
+    },
   },
 
   // History

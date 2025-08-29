@@ -32,6 +32,7 @@ const Dashboard: React.FC = () => {
     // Set up real-time updates
     const unsubscribeRunStarted = window.api.runs.onStarted(loadActiveRuns);
     const unsubscribeRunExit = window.api.runs.onExit(loadDashboardData);
+    const unsubscribeRunSkipped = window.api.runs.onSkipped(loadDashboardData);
     
     // Refresh active runs every 5 seconds
     const interval = setInterval(loadActiveRuns, 5000);
@@ -39,6 +40,7 @@ const Dashboard: React.FC = () => {
     return () => {
       unsubscribeRunStarted();
       unsubscribeRunExit();
+      unsubscribeRunSkipped();
       clearInterval(interval);
     };
   }, []);
@@ -204,13 +206,15 @@ const Dashboard: React.FC = () => {
 
   const handleSkipToggle = async (scheduleId: string, entryId: string, isSkipped: boolean) => {
     try {
-      const skipKey = `${scheduleId}-${entryId}`;
+      // Extract base entry ID by removing the -index suffix (e.g., "entry1-0" -> "entry1")
+      const baseEntryId = entryId.replace(/-\d+$/, '');
+      const skipKey = `${scheduleId}-${baseEntryId}`;
       
       if (isSkipped) {
-        await window.api.skip.set(scheduleId, entryId);
+        await window.api.skip.set(scheduleId, baseEntryId);
         setSkippedRuns(prev => new Set(prev).add(skipKey));
       } else {
-        await window.api.skip.clear(scheduleId, entryId);
+        await window.api.skip.clear(scheduleId, baseEntryId);
         setSkippedRuns(prev => {
           const newSet = new Set(prev);
           newSet.delete(skipKey);
@@ -294,7 +298,7 @@ const Dashboard: React.FC = () => {
                       <input 
                         type="checkbox" 
                         data-skip-key={`${run.scheduleId}-${run.entryId}`}
-                        checked={skippedRuns.has(`${run.scheduleId}-${run.entryId}`)}
+                        checked={skippedRuns.has(`${run.scheduleId}-${run.entryId.replace(/-\d+$/, '')}`)}
                         onChange={(e) => handleSkipToggle(run.scheduleId, run.entryId, e.target.checked)}
                       />
                       <span className="slider"></span>

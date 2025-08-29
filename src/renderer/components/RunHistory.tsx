@@ -87,6 +87,8 @@ const RunHistory: React.FC = () => {
         return 'status status-warning';
       case 'killed':
         return 'status status-info';
+      case 'skipped':
+        return 'status status-skipped';
       default:
         return 'status';
     }

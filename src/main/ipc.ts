@@ -343,6 +343,11 @@ export class IPCManager {
       }
     });
 
+    // Forward skip events to renderer for dashboard refresh
+    this.scheduler.on('run:skipped', (data) => {
+      webContents.send('run:skipped', data);
+    });
+
     // Handle manual skips - record them in history
     this.scheduler.on('run:skipped', async (data) => {
       try {
@@ -350,21 +355,39 @@ export class IPCManager {
           const scenario = this.scenarioCatalog.findById(data.scenarioId);
           const character = this.charactersStore.findById(data.characterId);
           
+          console.log('Skip recording debug:', {
+            scenarioId: data.scenarioId,
+            characterId: data.characterId,
+            scenarioFound: !!scenario,
+            characterFound: !!character,
+            scenarioName: scenario?.name,
+            characterName: character?.name
+          });
+          
           if (scenario && character) {
             const skipRecord: RunRecord = {
               runId: `skip-${data.scheduleId}-${data.entryId}-${Date.now()}`,
               scheduleId: data.scheduleId,
               entryId: data.entryId,
+              scenarioId: scenario.id,
+              characterId: character.id,
               scenario: { id: scenario.id, name: scenario.name },
               character: { id: character.id, name: character.name },
               ts: new Date().toISOString(),
               status: 'skipped',
-              duration: 0,
+              durationMs: 0,
               reason: 'Manual skip'
             };
             
             await this.runHistory.appendRecord(skipRecord);
             console.log(`Recorded manual skip for ${character.name}/${scenario.name}`);
+          } else {
+            console.error('Failed to find scenario or character for skip record:', {
+              scenarioId: data.scenarioId,
+              characterId: data.characterId,
+              scenarioFound: !!scenario,
+              characterFound: !!character
+            });
           }
         }
       } catch (error) {

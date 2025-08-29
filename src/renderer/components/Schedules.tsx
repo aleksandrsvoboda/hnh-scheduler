@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Schedule, ScheduleEntry, Scenario, Character, Cadence, OverlapPolicy } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import InfoTooltip from './InfoTooltip';
+import Toggle from './Toggle';
 
 // Helper functions to handle datetime-local without any timezone conversion
 const dateToLocalInput = (isoString: string): string => {
@@ -311,17 +312,12 @@ const Schedules: React.FC = () => {
                     <div className="schedule-item-header">
                       <div className="schedule-item-title">{schedule.name}</div>
                       <div className="schedule-item-controls">
-                        <label className="toggle-switch" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Toggle
                             checked={schedule.enabled}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              handleToggleSchedule(schedule.id, e.target.checked);
-                            }}
+                            onChange={(checked) => handleToggleSchedule(schedule.id, checked)}
                           />
-                          <span className="slider"></span>
-                        </label>
+                        </div>
                         <button
                           className="btn btn-danger btn-small"
                           onClick={(e) => {
@@ -770,14 +766,10 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
 
           <div className="form-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-              <div className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={entry.enabled}
-                  onChange={(e) => onUpdate({ enabled: e.target.checked })}
-                />
-                <span className="slider"></span>
-              </div>
+              <Toggle
+                checked={entry.enabled}
+                onChange={(checked) => onUpdate({ enabled: checked })}
+              />
               <span className="form-label" style={{ margin: 0 }}>Scenario Enabled</span>
             </label>
             <div className="info-text">

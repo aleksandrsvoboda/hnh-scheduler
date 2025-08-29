@@ -151,14 +151,6 @@ body {
   background-color: #c0392b;
 }
 
-.btn-success {
-  background-color: #27ae60;
-  color: white;
-}
-
-.btn-success:hover:not(:disabled) {
-  background-color: #229954;
-}
 
 .btn-small {
   padding: 4px 8px;
@@ -849,6 +841,8 @@ input:checked + .slider:before {
   display: inline-block;
   margin-left: 4px;
   cursor: help;
+  width: 16px;
+  height: 16px;
 }
 
 .info-icon {
@@ -872,7 +866,8 @@ input:checked + .slider:before {
 .tooltip-content {
   position: absolute;
   top: -8px;
-  transform: translateY(-100%);
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
   background-color: #1f2937;
   color: white;
   padding: 10px 14px;
@@ -885,4 +880,5 @@ input:checked + .slider:before {
   word-wrap: break-word;
   line-height: 1.4;
   text-transform: none;
+  pointer-events: none;
 }

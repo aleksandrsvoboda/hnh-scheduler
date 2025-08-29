@@ -109,7 +109,7 @@ const ScenarioLibrary: React.FC = () => {
         <div>
           <p className="text-muted mb-4">{scenarios.length} scenario(s) loaded</p>
           
-          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+          <div>
             <table className="table">
             <thead>
               <tr>

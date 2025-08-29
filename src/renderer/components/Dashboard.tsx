@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ActiveRun, RunRecord, UpcomingRun, Character, Scenario, Schedule } from '../types';
 import ScheduleGrid from './ScheduleGrid';
 import InfoTooltip from './InfoTooltip';
+import Toggle from './Toggle';
 
 declare global {
   interface Window {
@@ -270,12 +271,13 @@ const Dashboard: React.FC = () => {
       />
       
       {/* 1. Upcoming Runs */}
-      <div className="mb-6">
-        <h2 className="mb-2">Upcoming Runs</h2>
-        {upcomingRuns.length === 0 ? (
-          <p className="text-muted">No upcoming runs</p>
-        ) : (
-          <table className="table">
+      <div className="card mb-6">
+        <div className="section-header">Upcoming Runs</div>
+        <div className="section-content">
+          {upcomingRuns.length === 0 ? (
+            <p className="text-muted">No upcoming runs</p>
+          ) : (
+            <table className="table">
             <thead>
               <tr>
                 <th>Scenario</th>
@@ -298,30 +300,29 @@ const Dashboard: React.FC = () => {
                     <span className="status status-info">{run.cadenceType}</span>
                   </td>
                   <td>
-                    <label className="toggle-switch skip-toggle">
-                      <input 
-                        type="checkbox" 
-                        data-skip-key={`${run.scheduleId}-${run.entryId}`}
-                        checked={skippedRuns.has(`${run.scheduleId}-${run.entryId.replace(/-\d+$/, '')}`)}
-                        onChange={(e) => handleSkipToggle(run.scheduleId, run.entryId, e.target.checked)}
-                      />
-                      <span className="slider"></span>
-                    </label>
+                    <Toggle
+                      variant="danger"
+                      checked={skippedRuns.has(`${run.scheduleId}-${run.entryId.replace(/-\d+$/, '')}`)}
+                      onChange={(checked) => handleSkipToggle(run.scheduleId, run.entryId, checked)}
+                      data-skip-key={`${run.scheduleId}-${run.entryId}`}
+                    />
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
+        </div>
       </div>
 
       {/* 2. Active Runs */}
-      <div className="mb-6">
-        <h2 className="mb-2">Active Runs</h2>
-        {activeRuns.length === 0 ? (
-          <p className="text-muted">No active runs</p>
-        ) : (
-          <table className="table">
+      <div className="card mb-6">
+        <div className="section-header">Active Runs</div>
+        <div className="section-content">
+          {activeRuns.length === 0 ? (
+            <p className="text-muted">No active runs</p>
+          ) : (
+            <table className="table">
             <thead>
               <tr>
                 <th>Entry ID</th>
@@ -351,17 +352,19 @@ const Dashboard: React.FC = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
+        </div>
       </div>
 
       {/* 3. Recent Failures */}
-      <div className="mb-6">
-        <h2 className="mb-2">Recent Failures (Last 24h)</h2>
-        {recentFailures.length === 0 ? (
-          <p className="text-muted">No recent failures</p>
-        ) : (
-          <table className="table">
+      <div className="card mb-6">
+        <div className="section-header">Recent Failures (Last 24h)</div>
+        <div className="section-content">
+          {recentFailures.length === 0 ? (
+            <p className="text-muted">No recent failures</p>
+          ) : (
+            <table className="table">
             <thead>
               <tr>
                 <th>Time</th>
@@ -386,8 +389,9 @@ const Dashboard: React.FC = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

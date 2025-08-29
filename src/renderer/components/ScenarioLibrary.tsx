@@ -116,7 +116,6 @@ const ScenarioLibrary: React.FC = () => {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Steps</th>
-                <th>Step Details</th>
               </tr>
             </thead>
             <tbody>
@@ -135,53 +134,43 @@ const ScenarioLibrary: React.FC = () => {
                         <strong>{scenario.name}</strong>
                       </td>
                       <td style={{ verticalAlign: 'top' }}>
-                        <button 
-                          className="btn btn-outline btn-small"
-                          onClick={() => toggleScenario(scenario.id)}
-                          style={{ padding: '2px 8px', fontSize: '12px' }}
-                        >
-                          {isExpanded ? '▼' : '▶'} {scenario.steps.length} step(s)
-                        </button>
-                      </td>
-                      <td>
-                        <div>
-                          {scenario.steps.length > 1 && (
-                            <button
-                              className="btn btn-small mb-2"
-                              onClick={() => toggleScenario(scenario.id)}
-                              style={{
-                                background: 'none',
-                                border: '1px solid #ddd',
-                                padding: '2px 8px',
-                                fontSize: '11px',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {isExpanded ? 'Collapse ▲' : 'Expand ▼'}
-                            </button>
-                          )}
+                        {!isExpanded ? (
+                          <button 
+                            className="btn btn-outline btn-small"
+                            onClick={() => toggleScenario(scenario.id)}
+                            style={{ padding: '4px 12px', fontSize: '12px' }}
+                          >
+                            ▶ {scenario.steps.length} step(s)
+                          </button>
+                        ) : (
                           <div>
-                            {displaySteps.map((step, index) => (
-                              <div key={index} className="mb-1">
-                                <strong>{index + 1}.</strong> <code>{step.id}</code>
-                                {Object.keys(step.params).length > 0 && (
-                                  <div className="text-small text-muted ml-2">
-                                    {Object.entries(step.params).map(([key, value]) => (
-                                      <span key={key} className="mr-2">
-                                        {key}: {JSON.stringify(value)}
-                                      </span>
-                                    ))}
+                            <button 
+                              className="btn btn-outline btn-small mb-2"
+                              onClick={() => toggleScenario(scenario.id)}
+                              style={{ padding: '4px 12px', fontSize: '12px' }}
+                            >
+                              ▼ Collapse
+                            </button>
+                            <div>
+                              {scenario.steps.map((step, index) => (
+                                <div key={index} className="mb-2" style={{ paddingLeft: '8px', borderLeft: '2px solid #e5e7eb' }}>
+                                  <div>
+                                    <strong>{index + 1}.</strong> <code style={{ color: '#059669', fontWeight: '500' }}>{step.id}</code>
                                   </div>
-                                )}
-                              </div>
-                            ))}
-                            {!showSteps && scenario.steps.length > 1 && (
-                              <div className="text-muted text-small">
-                                ... and {scenario.steps.length - 1} more steps
-                              </div>
-                            )}
+                                  {Object.keys(step.params).length > 0 && (
+                                    <div className="text-small text-muted" style={{ marginTop: '4px', paddingLeft: '16px' }}>
+                                      {Object.entries(step.params).map(([key, value]) => (
+                                        <div key={key} style={{ marginBottom: '2px' }}>
+                                          <span style={{ fontWeight: '500' }}>{key}:</span> {JSON.stringify(value)}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </td>
                     </tr>
                   </React.Fragment>

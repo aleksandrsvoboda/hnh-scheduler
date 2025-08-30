@@ -1,6 +1,6 @@
 {
   "name": "hnh-scheduler",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A cross-platform Electron desktop app that runs scenarios on a schedule using local JSON files",
   "main": "dist/main/app.js",
   "author": {
@@ -22,7 +22,7 @@
     "productName": "HnH Scheduler",
     "files": [
       "dist/main/**/*",
-      "dist/renderer/**/*", 
+      "dist/renderer/**/*",
       "dist/preload/**/*",
       "icon.png",
       "package.json",
@@ -51,11 +51,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
-          "target": "portable", 
-          "arch": ["x64"]
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "${productName} Setup.${ext}"
@@ -64,7 +68,9 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "${productName}.${ext}",
@@ -74,11 +80,15 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "${name}_${version}_${arch}.${ext}",

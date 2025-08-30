@@ -20,18 +20,15 @@ body {
   height: 100vh;
 }
 
-/* Modern Navigation */
-.nav {
-  display: flex;
+/* Header Container - Single continuous gradient */
+.header-container {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  user-select: none;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 100;
 }
 
-.nav::before {
+.header-container::before {
   content: '';
   position: absolute;
   top: 0;
@@ -42,6 +39,30 @@ body {
   backdrop-filter: blur(10px);
   z-index: -1;
 }
+
+/* Title Bar */
+.title-bar {
+  display: flex;
+  height: 32px;
+  background: transparent;
+  position: relative;
+  z-index: 101;
+}
+
+.title-bar-drag-area {
+  flex: 1;
+  -webkit-app-region: drag;
+}
+
+/* Modern Navigation */
+.nav {
+  display: flex;
+  background: transparent;
+  user-select: none;
+  position: relative;
+  z-index: 100;
+}
+
 
 .nav-item {
   position: relative;
@@ -66,6 +87,41 @@ body {
   color: white;
   background: rgba(255, 255, 255, 0.25);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Window Controls */
+.window-controls {
+  margin-left: auto;
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.window-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.window-control:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.window-control.close:hover {
+  background-color: #e81123;
+  color: white;
+}
+
+.window-control svg {
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
 }
 
 /* Main content */

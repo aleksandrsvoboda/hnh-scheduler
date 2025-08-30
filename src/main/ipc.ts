@@ -1,4 +1,4 @@
-import { ipcMain, shell, dialog } from 'electron';
+import { ipcMain, shell, dialog, BrowserWindow } from 'electron';
 import { ConfigStore } from './stores/config-store';
 import { CredentialsStore } from './stores/credentials-store';
 import { CharactersStore } from './stores/characters-store';
@@ -20,9 +20,14 @@ export class IPCManager {
     private credentialVault: CredentialVault,
     private processManager: ProcessManager,
     private runHistory: RunHistory,
-    private scheduler: Scheduler
+    private scheduler: Scheduler,
+    private mainWindow?: BrowserWindow
   ) {
     this.setupHandlers();
+  }
+
+  setMainWindow(mainWindow: BrowserWindow): void {
+    this.mainWindow = mainWindow;
   }
 
   private setupHandlers(): void {
@@ -73,6 +78,29 @@ export class IPCManager {
       }
       
       return result.filePaths[0];
+    });
+
+    // Window controls
+    ipcMain.handle('app:minimizeWindow', () => {
+      if (this.mainWindow) {
+        this.mainWindow.minimize();
+      }
+    });
+
+    ipcMain.handle('app:toggleMaximizeWindow', () => {
+      if (this.mainWindow) {
+        if (this.mainWindow.isMaximized()) {
+          this.mainWindow.restore();
+        } else {
+          this.mainWindow.maximize();
+        }
+      }
+    });
+
+    ipcMain.handle('app:closeWindow', () => {
+      if (this.mainWindow) {
+        this.mainWindow.close();
+      }
     });
 
     // Scenarios

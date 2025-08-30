@@ -55,7 +55,7 @@ class HnHSchedulerApp {
 
       this.scheduler = new Scheduler();
 
-      // 5. Set up IPC
+      // 5. Set up IPC (will be updated with window reference later)
       this.ipcManager = new IPCManager(
         this.configStore,
         this.credentialsStore,
@@ -155,7 +155,7 @@ class HnHSchedulerApp {
       ? path.join(process.resourcesPath, 'icon.png')
       : path.join(__dirname, '../../icon.png');
     
-    this.mainWindow = new BrowserWindow({
+    const windowConfig: any = {
       width: 1200,
       height: 800,
       icon: iconPath,
@@ -165,7 +165,24 @@ class HnHSchedulerApp {
         preload: preloadPath,
       },
       show: false, // Show after ready
-    });
+    };
+
+    // Platform-specific window styling
+    if (process.platform === 'win32') {
+      // Windows: Custom frameless window
+      windowConfig.frame = false;
+    } else if (process.platform === 'darwin') {
+      // macOS: Keep native traffic lights, hide title bar
+      windowConfig.titleBarStyle = 'hiddenInset';
+    } else {
+      // Linux: Standard frame
+      windowConfig.frame = true;
+    }
+
+    this.mainWindow = new BrowserWindow(windowConfig);
+
+    // Update IPC manager with window reference for window controls
+    this.ipcManager.setMainWindow(this.mainWindow);
 
     // Set up IPC event forwarding
     if (this.ipcManager && this.mainWindow.webContents) {

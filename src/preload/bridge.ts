@@ -16,6 +16,9 @@ const api = {
   app: {
     openDataDir: (): Promise<void> => ipcRenderer.invoke('app:openDataDir'),
     browseFile: (options: { title: string; filters: any[] }): Promise<string | null> => ipcRenderer.invoke('app:browseFile', options),
+    minimizeWindow: (): Promise<void> => ipcRenderer.invoke('app:minimizeWindow'),
+    toggleMaximizeWindow: (): Promise<void> => ipcRenderer.invoke('app:toggleMaximizeWindow'),
+    closeWindow: (): Promise<void> => ipcRenderer.invoke('app:closeWindow'),
   },
 
   // Scenarios

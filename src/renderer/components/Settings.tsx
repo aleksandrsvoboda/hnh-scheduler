@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Config } from '../types';
+import InfoTooltip from './InfoTooltip';
 
 const Settings: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null);
@@ -231,7 +232,10 @@ const Settings: React.FC = () => {
           <h3 className="mb-3">Execution Settings</h3>
           
           <div className="form-group">
-            <label className="form-label">Global Concurrency Limit</label>
+            <label className="form-label">
+              Global Concurrency Limit
+              <InfoTooltip text="Controls how many scenarios can run at the same time across all schedules. Higher values allow more parallel execution but use more system resources." />
+            </label>
             <input
               type="number"
               className="form-input"
@@ -240,9 +244,6 @@ const Settings: React.FC = () => {
               min="1"
               max="50"
             />
-            <p className="text-muted text-small mt-1">
-              Maximum number of scenarios that can run simultaneously across all schedules.
-            </p>
           </div>
         </div>
 
@@ -251,7 +252,10 @@ const Settings: React.FC = () => {
           <h3 className="mb-3">Game Configuration</h3>
           
           <div className="form-group">
-            <label className="form-label">Java Path</label>
+            <label className="form-label">
+              Java Path
+              <InfoTooltip text="Path to the Java executable. Use 'java' if Java is in your system PATH, or specify the full path to java.exe. Must be compatible with your Haven & Hearth client version." />
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -264,13 +268,13 @@ const Settings: React.FC = () => {
                 Browse
               </button>
             </div>
-            <p className="text-muted text-small mt-1">
-              Path to Java executable. Use "java" if it's in your system PATH, or browse to select java.exe.
-            </p>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Hafen JAR Path</label>
+            <label className="form-label">
+              Hafen JAR Path
+              <InfoTooltip text="Path to your Haven & Hearth client JAR file (typically hafen.jar). Use Browse to locate the file." />
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -283,9 +287,6 @@ const Settings: React.FC = () => {
                 Browse
               </button>
             </div>
-            <p className="text-muted text-small mt-1">
-              Path to the hafen.jar client file. Use relative or absolute path, or browse to select the JAR file.
-            </p>
           </div>
 
           <div className="form-group">
@@ -324,7 +325,10 @@ const Settings: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Log Retention (Days)</label>
+            <label className="form-label">
+              Log Retention (Days)
+              <InfoTooltip text="How long to keep run history logs before automatic cleanup. Older log files are automatically deleted to save disk space." />
+            </label>
             <input
               type="number"
               className="form-input"
@@ -333,9 +337,6 @@ const Settings: React.FC = () => {
               min="1"
               max="365"
             />
-            <p className="text-muted text-small mt-1">
-              Number of days to keep run history logs before automatic cleanup.
-            </p>
           </div>
 
           {config.dataDir && (

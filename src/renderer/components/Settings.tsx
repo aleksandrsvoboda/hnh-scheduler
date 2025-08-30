@@ -218,9 +218,9 @@ const Settings: React.FC = () => {
 
       <div className="max-w-2xl">
         {/* Scenarios Information */}
-        <div className="mb-6 p-4 border rounded bg-gray-50">
-          <h3 className="mb-3">Scenarios</h3>
-          <p className="text-muted text-small">
+        <div className="settings-section settings-info-section">
+          <h3>Scenarios</h3>
+          <p className="form-help">
             Scenarios are automatically loaded from Haven and Hearth AppData folder:
             <br />
             <code>%APPDATA%/Haven and Hearth/scenarios.nurgling.json</code>
@@ -228,8 +228,8 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Execution Settings */}
-        <div className="mb-6 p-4 border rounded">
-          <h3 className="mb-3">Execution Settings</h3>
+        <div className="settings-section">
+          <h3>Execution Settings</h3>
           
           <div className="form-group">
             <label className="form-label">
@@ -248,8 +248,8 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Game Configuration */}
-        <div className="mb-6 p-4 border rounded">
-          <h3 className="mb-3">Game Configuration</h3>
+        <div className="settings-section">
+          <h3>Game Configuration</h3>
           
           <div className="form-group">
             <label className="form-label">
@@ -289,25 +289,27 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              <input
-                type="checkbox"
-                checked={config.isJava18 || false}
-                onChange={(e) => handleJavaVersionChange(e.target.checked)}
-                style={{ marginRight: '8px' }}
-              />
-              Java 18+ (Oracle)
-            </label>
-            <p className="text-muted text-small mt-1">
-              Enable if using Java 18 or newer. Adds required export flags for modern Java versions.
-            </p>
+          <div className="form-checkbox-group">
+            <input
+              type="checkbox"
+              id="java18"
+              checked={config.isJava18 || false}
+              onChange={(e) => handleJavaVersionChange(e.target.checked)}
+            />
+            <div>
+              <label className="form-checkbox-label" htmlFor="java18">
+                Java 18+ (Oracle)
+              </label>
+              <p className="form-help">
+                Enable if using Java 18 or newer. Adds required export flags for modern Java versions.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* System Settings */}
-        <div className="mb-6 p-4 border rounded">
-          <h3 className="mb-3">System Settings</h3>
+        <div className="settings-section">
+          <h3>System Settings</h3>
           
           <div className="form-group">
             <label className="form-label">
@@ -354,7 +356,7 @@ const Settings: React.FC = () => {
                   Open
                 </button>
               </div>
-              <p className="text-muted text-small mt-1">
+              <p className="form-help">
                 Override the default data directory location. Restart required after changing.
               </p>
             </div>
@@ -362,8 +364,8 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Data Management */}
-        <div className="mb-6 p-4 border rounded">
-          <h3 className="mb-3">Data Management</h3>
+        <div className="settings-section">
+          <h3>Data Management</h3>
           
           <div className="flex gap-2">
             <button className="btn btn-secondary" onClick={handleOpenDataDir}>
@@ -371,14 +373,14 @@ const Settings: React.FC = () => {
             </button>
           </div>
           
-          <p className="text-muted text-small mt-2">
+          <p className="form-help">
             Access your configuration files, logs, and backup files.
           </p>
         </div>
 
         {/* Status Information */}
-        <div className="mb-6 p-4 border rounded bg-gray-50">
-          <h3 className="mb-3">System Information</h3>
+        <div className="settings-section settings-info-section">
+          <h3>System Information</h3>
           
           <div className="text-small">
             <div className="mb-1">

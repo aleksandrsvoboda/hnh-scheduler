@@ -205,28 +205,32 @@ body {
 
 /* Forms */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-label {
-  display: block;
-  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
   font-weight: 600;
   color: #374151;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+  font-size: 14px;
+  line-height: 1.4;
+  gap: 6px;
 }
 
 .form-input,
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
-  background-color: #fafafa;
+  line-height: 1.5;
+  background-color: white;
+  color: #374151;
+  font-family: inherit;
   transition: all 0.2s ease;
 }
 
@@ -235,13 +239,80 @@ body {
 .form-textarea:focus {
   outline: none;
   border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
   background-color: white;
 }
 
 .form-textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.form-input:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: #f8f9fa;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Settings page specific improvements */
+.settings-section {
+  margin-bottom: 15px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.settings-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.settings-info-section {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.settings-info-section h3 {
+  color: #475569;
+}
+
+/* Form help text */
+.form-help {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Checkbox styling consistency */
+.form-checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.form-checkbox-group input[type="checkbox"] {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.form-checkbox-group .form-checkbox-label {
+  margin: 0;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #374151;
 }
 
 /* Layout helpers */

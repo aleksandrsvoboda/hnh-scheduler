@@ -1,0 +1,176 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Setup Python (for native dependencies)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Rebuild native dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npm rebuild
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.7z
+            dist/*.zip
+          retention-days: 5
+          
+  create-release:
+    needs: release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Setup Python (for native dependencies)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Bump version
+        id: version
+        run: |
+          npm version ${{ github.event.inputs.release_type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Commit version bump
+        run: |
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git tag ${{ steps.version.outputs.new_version }}
+          git push origin HEAD --follow-tags
+          
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+          
+      - name: Prepare release assets
+        run: |
+          mkdir release-assets
+          find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.7z" -o -name "*.zip" \) -exec cp {} release-assets/ \;
+          ls -la release-assets/
+          
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract latest version changes from CHANGELOG.md
+            CHANGELOG_CONTENT=$(sed -n "/## \[${{ steps.version.outputs.version_number }}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+            if [ -z "$CHANGELOG_CONTENT" ]; then
+              CHANGELOG_CONTENT="Release ${{ steps.version.outputs.new_version }}"
+            fi
+          else
+            CHANGELOG_CONTENT="Release ${{ steps.version.outputs.new_version }}"
+          fi
+          
+          # Write multiline content to output
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "content<<$EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          name: HnH Scheduler ${{ steps.version.outputs.new_version }}
+          body: |
+            ${{ steps.changelog.outputs.content }}
+            
+            ## Downloads
+            
+            **Windows:**
+            - `HnH Scheduler Setup.exe` - Windows installer (recommended)
+            - `HnH Scheduler.exe` - Portable Windows executable
+            
+            **macOS:**
+            - `HnH Scheduler.dmg` - macOS disk image
+            
+            **Linux:**
+            - `HnH Scheduler.AppImage` - Universal Linux executable
+            - `hnh-scheduler_*_amd64.deb` - Debian/Ubuntu package
+            
+            ## Installation Notes
+            
+            - **Windows**: Run the installer or portable executable. Windows may show a security warning for unsigned applications.
+            - **macOS**: Open the DMG and drag the app to Applications. You may need to allow the app in System Preferences > Security & Privacy.
+            - **Linux**: Make the AppImage executable (`chmod +x`) or install the DEB package.
+            
+            ## Requirements
+            
+            - Java Runtime Environment (JRE) 8 or newer
+            - Haven & Hearth client installation
+          files: release-assets/*
+          prerelease: ${{ github.event.inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

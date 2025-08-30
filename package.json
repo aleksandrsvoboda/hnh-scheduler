@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "A cross-platform Electron desktop app that runs scenarios on a schedule using local JSON files",
   "main": "dist/main/app.js",
+  "author": {
+    "name": "HnH Scheduler",
+    "email": "noreply@example.com"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "concurrently \"tsc --watch\" \"vite\" \"electron dist/main/app.js\"",
     "build": "tsc && vite build && electron-builder",
@@ -76,7 +81,9 @@
           "arch": ["x64"]
         }
       ],
-      "artifactName": "${name}_${version}_${arch}.${ext}"
+      "artifactName": "${name}_${version}_${arch}.${ext}",
+      "maintainer": "HnH Scheduler <noreply@example.com>",
+      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,

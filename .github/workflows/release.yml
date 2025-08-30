@@ -18,6 +18,10 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
@@ -87,6 +91,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
           
       - name: Setup Node.js
         uses: actions/setup-node@v4

@@ -59,10 +59,11 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": ["x64"]
         }
       ],
-      "artifactName": "${productName}.${ext}"
+      "artifactName": "${productName}.${ext}",
+      "category": "public.app-category.utilities"
     },
     "linux": {
       "target": [

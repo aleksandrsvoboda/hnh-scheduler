@@ -26,6 +26,15 @@ export interface NurglingScenarios {
   scenarios: Scenario[];
 }
 
+export interface Area {
+  id: number;
+  name: string;
+}
+
+export interface NurglingAreas {
+  areas: Area[];
+}
+
 export interface CredentialRef {
   id: string;
   label: string;

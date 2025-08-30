@@ -6,6 +6,7 @@ const ScenarioLibrary: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedScenarios, setExpandedScenarios] = useState<Set<number>>(new Set());
+  const [areaNames, setAreaNames] = useState<Record<number, string>>({});
 
   useEffect(() => {
     loadScenarios();
@@ -55,6 +56,46 @@ const ScenarioLibrary: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  // Function to get area name, with caching
+  const getAreaName = async (areaId: number): Promise<string> => {
+    if (areaNames[areaId]) {
+      return areaNames[areaId];
+    }
+    
+    try {
+      const name = await window.api.scenarios.getAreaName(areaId);
+      setAreaNames(prev => ({ ...prev, [areaId]: name }));
+      return name;
+    } catch (error) {
+      console.error('Failed to get area name for', areaId, error);
+      return `${areaId}`;
+    }
+  };
+
+  // Component to render a parameter key and value, handling area IDs specially
+  const ParameterEntry: React.FC<{ paramKey: string; value: any }> = ({ paramKey, value }) => {
+    const [displayKey, setDisplayKey] = useState<string>(paramKey);
+    const [displayValue, setDisplayValue] = useState<string>(JSON.stringify(value));
+    
+    useEffect(() => {
+      if (paramKey === 'areaId' && typeof value === 'number') {
+        getAreaName(value).then(areaName => {
+          setDisplayKey('area name');
+          setDisplayValue(areaName);
+        });
+      } else {
+        setDisplayKey(paramKey);
+        setDisplayValue(JSON.stringify(value));
+      }
+    }, [paramKey, value]);
+    
+    return (
+      <>
+        <span style={{ fontWeight: '500' }}>{displayKey}:</span> {displayValue}
+      </>
+    );
   };
 
   const expandAll = () => {
@@ -161,7 +202,7 @@ const ScenarioLibrary: React.FC = () => {
                                     <div className="text-small text-muted" style={{ marginTop: '4px', paddingLeft: '16px' }}>
                                       {Object.entries(step.params).map(([key, value]) => (
                                         <div key={key} style={{ marginBottom: '2px' }}>
-                                          <span style={{ fontWeight: '500' }}>{key}:</span> {JSON.stringify(value)}
+                                          <ParameterEntry paramKey={key} value={value} />
                                         </div>
                                       ))}
                                     </div>

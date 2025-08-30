@@ -3,22 +3,29 @@ import * as path from 'path';
 import * as chokidar from 'chokidar';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
-import { NurglingScenarios, Scenario } from '../types';
+import { NurglingScenarios, Scenario, NurglingAreas, Area } from '../types';
 
 export class ScenarioCatalog extends EventEmitter {
   private catalog: Scenario[] = [];
+  private areas: Area[] = [];
   private watcher?: chokidar.FSWatcher;
+  private areasWatcher?: chokidar.FSWatcher;
   private updateDebounceTimer?: NodeJS.Timeout;
+  private areasDebounceTimer?: NodeJS.Timeout;
   private lastError: string | null = null;
   private readonly scenariosFilePath: string;
+  private readonly areasFilePath: string;
 
   constructor() {
     super();
-    this.scenariosFilePath = path.join(app.getPath('userData'), '..', 'Haven and Hearth', 'scenarios.nurgling.json');
+    const hafenDataDir = path.join(app.getPath('userData'), '..', 'Haven and Hearth');
+    this.scenariosFilePath = path.join(hafenDataDir, 'scenarios.nurgling.json');
+    this.areasFilePath = path.join(hafenDataDir, 'areas.nurgling.json');
   }
 
   async initialize(): Promise<void> {
     await this.loadCatalog();
+    await this.loadAreas();
     this.startWatching();
   }
 
@@ -27,9 +34,17 @@ export class ScenarioCatalog extends EventEmitter {
       await this.watcher.close();
       this.watcher = undefined;
     }
+    if (this.areasWatcher) {
+      await this.areasWatcher.close();
+      this.areasWatcher = undefined;
+    }
     if (this.updateDebounceTimer) {
       clearTimeout(this.updateDebounceTimer);
       this.updateDebounceTimer = undefined;
+    }
+    if (this.areasDebounceTimer) {
+      clearTimeout(this.areasDebounceTimer);
+      this.areasDebounceTimer = undefined;
     }
   }
 
@@ -61,8 +76,32 @@ export class ScenarioCatalog extends EventEmitter {
     }
   }
 
+  private async loadAreas(): Promise<void> {
+    try {
+      const content = await fs.readFile(this.areasFilePath, 'utf-8');
+      const parsed = JSON.parse(content) as NurglingAreas;
+      
+      this.validateAreas(parsed);
+      this.areas = parsed.areas;
+      
+      this.emit('areas:updated', this.areas);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if ((error as any).code === 'ENOENT') {
+        // File doesn't exist - this is optional, just use empty areas
+        this.areas = [];
+        return;
+      }
+      
+      console.warn('Failed to load areas catalog:', error);
+      this.areas = [];
+    }
+  }
+
 
   private startWatching(): void {
+    // Watch scenarios file
     if (this.watcher) {
       this.watcher.close();
     }
@@ -80,6 +119,25 @@ export class ScenarioCatalog extends EventEmitter {
       console.error('Scenario file watcher error:', error);
       this.emit('watcher:error', error);
     });
+
+    // Watch areas file
+    if (this.areasWatcher) {
+      this.areasWatcher.close();
+    }
+
+    this.areasWatcher = chokidar.watch(this.areasFilePath, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.areasWatcher.on('change', () => {
+      this.debouncedAreasReload();
+    });
+
+    this.areasWatcher.on('error', (error) => {
+      console.error('Areas file watcher error:', error);
+      this.emit('areas:watcher:error', error);
+    });
   }
 
   private debouncedReload(): void {
@@ -89,6 +147,16 @@ export class ScenarioCatalog extends EventEmitter {
 
     this.updateDebounceTimer = setTimeout(() => {
       this.loadCatalog();
+    }, 500); // 500ms debounce
+  }
+
+  private debouncedAreasReload(): void {
+    if (this.areasDebounceTimer) {
+      clearTimeout(this.areasDebounceTimer);
+    }
+
+    this.areasDebounceTimer = setTimeout(() => {
+      this.loadAreas();
     }, 500); // 500ms debounce
   }
 
@@ -134,12 +202,45 @@ export class ScenarioCatalog extends EventEmitter {
     }
   }
 
+  private validateAreas(areas: NurglingAreas): void {
+    if (!areas || typeof areas !== 'object') {
+      throw new Error('Invalid areas format');
+    }
+
+    if (!Array.isArray(areas.areas)) {
+      throw new Error('Areas must be an array');
+    }
+
+    for (const area of areas.areas) {
+      if (typeof area.id !== 'number') {
+        throw new Error('Area ID must be a number');
+      }
+      
+      if (!area.name?.trim()) {
+        throw new Error(`Area ${area.id}: name is required`);
+      }
+    }
+  }
+
   getScenarios(): Scenario[] {
     return [...this.catalog];
   }
 
+  getAreas(): Area[] {
+    return [...this.areas];
+  }
+
   findById(id: number): Scenario | undefined {
     return this.catalog.find(s => s.id === id);
+  }
+
+  findAreaById(id: number): Area | undefined {
+    return this.areas.find(a => a.id === id);
+  }
+
+  getAreaName(areaId: number): string {
+    const area = this.findAreaById(areaId);
+    return area?.name || `${areaId}`;
   }
 
   getLastError(): string | null {

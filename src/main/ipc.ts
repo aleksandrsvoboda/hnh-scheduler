@@ -80,6 +80,10 @@ export class IPCManager {
       return this.scenarioCatalog.getScenarios();
     });
 
+    ipcMain.handle('scenarios:getAreaName', (_, areaId: number) => {
+      return this.scenarioCatalog.getAreaName(areaId);
+    });
+
     ipcMain.handle('scenarios:openInEditor', async () => {
       const scenariosPath = require('path').join(require('electron').app.getPath('userData'), '..', 'Haven and Hearth', 'scenarios.nurgling.json');
       await shell.openPath(scenariosPath);

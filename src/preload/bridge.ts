@@ -21,6 +21,7 @@ const api = {
   // Scenarios
   scenarios: {
     get: (): Promise<Scenario[]> => ipcRenderer.invoke('scenarios:get'),
+    getAreaName: (areaId: number): Promise<string> => ipcRenderer.invoke('scenarios:getAreaName', areaId),
     openInEditor: (): Promise<void> => ipcRenderer.invoke('scenarios:openInEditor'),
     onUpdated: (callback: (scenarios: Scenario[]) => void) => {
       const handler = (_: any, scenarios: Scenario[]) => callback(scenarios);

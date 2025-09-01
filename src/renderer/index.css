@@ -625,8 +625,16 @@ body {
   font-size: 13px;
   color: #6b7280;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.schedule-entry-info {
+  display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .button-group {

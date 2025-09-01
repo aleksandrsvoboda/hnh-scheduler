@@ -563,6 +563,17 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
             </div>
           </div>
         </button>
+      </div>
+
+      <div className="schedule-entry-meta">
+        <div className="schedule-entry-info">
+          <span>{formatCadence(entry.cadence)}</span>
+          <span>{formatDuration(entry.maxDurationMs)} max</span>
+          <span>{entry.overlapPolicy} on overlap</span>
+          <span className={`status ${entry.enabled ? 'status-success' : 'status-warning'}`}>
+            {entry.enabled ? 'enabled' : 'disabled'}
+          </span>
+        </div>
         
         <div className="button-group">
           <button className="btn btn-info btn-small" onClick={onTest}>
@@ -572,15 +583,6 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
             Delete
           </button>
         </div>
-      </div>
-
-      <div className="schedule-entry-meta">
-        <span>{formatCadence(entry.cadence)}</span>
-        <span>{formatDuration(entry.maxDurationMs)} max</span>
-        <span>{entry.overlapPolicy} on overlap</span>
-        <span className={`status ${entry.enabled ? 'status-success' : 'status-warning'}`}>
-          {entry.enabled ? 'enabled' : 'disabled'}
-        </span>
       </div>
 
       {isExpanded && (

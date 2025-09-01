@@ -6,7 +6,7 @@ Keep state in the renderer; persist through IPC.
 
 ## Navigation
 
-Dashboard | Schedules | Scenario Library | Characters & Credentials | Run History | Settings
+Dashboard | Schedules | Scenario Library | Characters & Accounts | Run History | Settings
 
 ## Screens
 ### Dashboard

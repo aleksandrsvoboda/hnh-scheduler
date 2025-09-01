@@ -317,13 +317,13 @@ const CharactersCredentials: React.FC = () => {
 
   return (
     <div>
-      <h1 className="mb-4">Characters & Credentials</h1>
+      <h1 className="mb-4">Characters & Accounts</h1>
 
-      {/* Credentials Section */}
+      {/* Accounts Section */}
       <div className="card mb-6">
         <div className="section-header">
           <div className="flex gap-2 items-center">
-            <div className="flex-1">Credentials</div>
+            <div className="flex-1">Accounts</div>
             <button className="btn btn-primary btn-small" onClick={handleCreateCredential}>
               Add Credential
             </button>
@@ -332,7 +332,7 @@ const CharactersCredentials: React.FC = () => {
         <div className="section-content">
           {credentials.length === 0 ? (
             <div className="text-center text-muted" style={{ padding: '40px 20px' }}>
-              <p>No credentials configured</p>
+              <p>No accounts configured</p>
               <p className="info-text">Click "Add Credential" to create your first credential set</p>
             </div>
           ) : (

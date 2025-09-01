@@ -6,6 +6,7 @@ import CharactersCredentials from './components/CharactersCredentials';
 import RunHistory from './components/RunHistory';
 import Settings from './components/Settings';
 import WindowControls from './components/WindowControls';
+import StatusIndicator from './components/StatusIndicator';
 
 type Screen = 'dashboard' | 'schedules' | 'scenarios' | 'characters' | 'history' | 'settings';
 
@@ -42,44 +43,48 @@ const App: React.FC = () => {
             <WindowControls />
           </div>
         )}
-        <nav className="nav">
-          <div 
-            className={`nav-item ${currentScreen === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('dashboard')}
-          >
-            Dashboard
-          </div>
-          <div 
-            className={`nav-item ${currentScreen === 'schedules' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('schedules')}
-          >
-            Schedules
-          </div>
-          <div 
-            className={`nav-item ${currentScreen === 'scenarios' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('scenarios')}
-          >
-            Scenario Library
-          </div>
-          <div 
-            className={`nav-item ${currentScreen === 'characters' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('characters')}
-          >
-            Characters & Credentials
-          </div>
-          <div 
-            className={`nav-item ${currentScreen === 'history' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('history')}
-          >
-            Run History
-          </div>
-          <div 
-            className={`nav-item ${currentScreen === 'settings' ? 'active' : ''}`}
-            onClick={() => setCurrentScreen('settings')}
-          >
-            Settings
-          </div>
-        </nav>
+        <div className="nav-container">
+          <nav className="nav">
+            <div 
+              className={`nav-item ${currentScreen === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('dashboard')}
+            >
+              Dashboard
+            </div>
+            <div 
+              className={`nav-item ${currentScreen === 'schedules' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('schedules')}
+            >
+              Schedules
+            </div>
+            <div 
+              className={`nav-item ${currentScreen === 'scenarios' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('scenarios')}
+            >
+              Scenario Library
+            </div>
+            <div 
+              className={`nav-item ${currentScreen === 'characters' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('characters')}
+            >
+              Characters & Accounts
+            </div>
+            <div 
+              className={`nav-item ${currentScreen === 'history' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('history')}
+            >
+              Run History
+            </div>
+            <div 
+              className={`nav-item ${currentScreen === 'settings' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('settings')}
+            >
+              Settings
+            </div>
+          </nav>
+          
+          <StatusIndicator />
+        </div>
       </div>
       
       <main className="main-content">

@@ -254,7 +254,7 @@ const Settings: React.FC = () => {
           <div className="form-group">
             <label className="form-label">
               Java Path
-              <InfoTooltip text="Path to the Java executable. Use 'java' if Java is in your system PATH, or specify the full path to java.exe. Must be compatible with your Haven & Hearth client version." />
+              <InfoTooltip text="Path to the Java executable. Use 'java' if Java is in your system PATH, or specify the full path to java.exe. Must be compatible with your Haven & Hearth client version. Java 21 is recommended for optimal performance." />
             </label>
             <div className="flex gap-2">
               <input

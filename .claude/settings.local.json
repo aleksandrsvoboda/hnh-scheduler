@@ -11,7 +11,13 @@
       "Bash(npx asar pack:*)",
       "Bash(npm run build:*)",
       "Bash(npx asar extract:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Read(C:\\Users\\imbecil\\nurgling2/**)",
+      "Read(C:\\Users\\imbecil\\nurgling2\\src\\haven/**)",
+      "Read(C:\\Users\\imbecil\\nurgling2/**)",
+      "Read(C:\\Users\\imbecil\\nurgling2/**)",
+      "Read(C:\\Users\\imbecil\\nurgling2/**)",
+      "Read(C:\\Users\\imbecil\\nurgling2\\src\\haven/**)"
     ],
     "deny": [],
     "ask": []

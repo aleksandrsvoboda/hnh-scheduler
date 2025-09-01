@@ -307,6 +307,30 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
+        {/* Window Management */}
+        <div className="settings-section">
+          <h3>Window Management</h3>
+          
+          <div className="form-checkbox-group">
+            <input
+              type="checkbox"
+              id="autoMinimizeWindow"
+              checked={config.autoMinimizeWindow || false}
+              onChange={(e) => handleConfigChange('autoMinimizeWindow', e.target.checked)}
+            />
+            <div>
+              <label className="form-checkbox-label" htmlFor="autoMinimizeWindow">
+                Auto-minimize game windows
+                <InfoTooltip text="Automatically minimize the Haven & Hearth client window when a scheduled run starts. Works on Windows, macOS, and Linux." />
+              </label>
+              <p className="form-help">
+                Game windows will be minimized after launching.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
         {/* System Settings */}
         <div className="settings-section">
           <h3>System Settings</h3>

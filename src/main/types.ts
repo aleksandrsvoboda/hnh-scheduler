@@ -9,6 +9,8 @@ export interface Config {
   javaPath?: string;
   hafenPath?: string;
   isJava18?: boolean;
+  // Window management
+  autoMinimizeWindow?: boolean;
 }
 
 export interface ScenarioStep {

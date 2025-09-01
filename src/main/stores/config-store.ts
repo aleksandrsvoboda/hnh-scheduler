@@ -12,6 +12,8 @@ const DEFAULT_CONFIG: Config = {
   javaPath: 'java',
   hafenPath: 'hafen.jar',
   isJava18: false,
+  // Default window management settings
+  autoMinimizeWindow: false,
 };
 
 export class ConfigStore extends JsonStore<Config> {

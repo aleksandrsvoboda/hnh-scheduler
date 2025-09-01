@@ -85,11 +85,17 @@ export class ProcessManager extends EventEmitter {
       ];
     }
 
-    // Spawn process
-    const childProcess = spawn(javaCommand, javaArgs, {
-      cwd: process.cwd(), // Should be configurable to point to Hafen directory
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    // Spawn process with optional minimized launch
+    let childProcess: ChildProcess;
+    
+    if (config.autoMinimizeWindow) {
+      childProcess = this.spawnMinimized(javaCommand, javaArgs);
+    } else {
+      childProcess = spawn(javaCommand, javaArgs, {
+        cwd: process.cwd(),
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+    }
 
     const run: ProcessRun = {
       runId,
@@ -129,6 +135,7 @@ export class ProcessManager extends EventEmitter {
       scenario: scenario.name,
       character: character.name
     });
+
 
     return runId;
   }
@@ -368,5 +375,104 @@ export class ProcessManager extends EventEmitter {
 
   isRunActive(runId: string): boolean {
     return this.activeRuns.has(runId);
+  }
+
+  /**
+   * Spawn process with platform-specific minimized launch
+   */
+  private spawnMinimized(javaCommand: string, javaArgs: string[]): ChildProcess {
+    const platform = os.platform();
+    
+    console.log(`[ProcessManager] Launching minimized on platform: ${platform}`);
+    
+    switch (platform) {
+      case 'win32':
+        // Windows: Launch normally but with windowsHide, then minimize via PowerShell
+        const winProcess = spawn(javaCommand, javaArgs, {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+          windowsHide: true
+        });
+        
+        // Use PowerShell to minimize after window appears
+        setTimeout(() => {
+          if (winProcess.pid) {
+            spawn('powershell', ['-WindowStyle', 'Hidden', '-Command', `
+              try {
+                $process = Get-Process -Id ${winProcess.pid} -ErrorAction Stop;
+                if ($process.MainWindowHandle -ne 0) {
+                  Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class Win32 { [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow); }';
+                  [Win32]::ShowWindow($process.MainWindowHandle, 2);
+                }
+              } catch { }
+            `], { stdio: 'ignore' });
+          }
+        }, 2000);
+        
+        return winProcess;
+        
+      case 'darwin':
+        // macOS: Launch with nohup and minimize via AppleScript shortly after
+        const macProcess = spawn(javaCommand, javaArgs, {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+          detached: false
+        });
+        
+        // Minimize after a short delay using AppleScript
+        setTimeout(() => {
+          spawn('osascript', ['-e', `
+            tell application "System Events"
+              set javaProcesses to every process whose name contains "java"
+              repeat with proc in javaProcesses
+                try
+                  tell proc
+                    set windowList to every window
+                    repeat with win in windowList
+                      set minimized of win to true
+                    end repeat
+                  end tell
+                end try
+              end repeat
+            end tell
+          `], { stdio: 'ignore' });
+        }, 2000);
+        
+        return macProcess;
+        
+      case 'linux':
+        // Linux: Regular spawn, then minimize with xdotool
+        const linuxProcess = spawn(javaCommand, javaArgs, {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }
+        });
+        
+        // Use xdotool to minimize after window appears
+        setTimeout(() => {
+          const minimizeScript = `
+            # Wait for window to appear and minimize it
+            for i in {1..5}; do
+              sleep 1
+              if xdotool search --pid ${linuxProcess.pid} --onlyvisible 2>/dev/null | head -1 | xargs -I {} xdotool windowminimize {} 2>/dev/null; then
+                echo "Window minimized successfully"
+                break
+              fi
+            done
+          `;
+          
+          spawn('bash', ['-c', minimizeScript], { stdio: 'ignore' });
+        }, 1000);
+        
+        return linuxProcess;
+        
+      default:
+        console.warn(`[ProcessManager] Minimized launch not supported on platform: ${platform}`);
+        // Fallback to regular spawn
+        return spawn(javaCommand, javaArgs, {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
+    }
   }
 }

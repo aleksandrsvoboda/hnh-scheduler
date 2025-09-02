@@ -15,7 +15,7 @@ HnH Scheduler is a desktop application that:
 
 Before using HnH Scheduler, you need:
 
-1. **Java Runtime Environment (JRE) 8 or newer**
+1. **Java Runtime Environment (JRE) 21 (recommended)**
 2. **Nurgling client** (hafen.jar) 
 3. **Existing scenarios** created in Nurgling (stored as `scenarios.nurgling.json`)
 
@@ -76,7 +76,7 @@ For each scenario you add:
 - **Scenario**: Select from your available scenarios
 - **Character**: Choose which character will run this scenario
 - **Timing**: Choose from:
-  - **Interval**: Run every X minutes/hours/days
+  - **Interval**: Run every X minutes/hours
   - **Cron**: Use cron syntax for complex scheduling (e.g., "0 */6 * * *" for every 6 hours)
   - **Once**: Run once at a specific date/time
 - **Max Duration**: Maximum time to let the scenario run before stopping it
@@ -176,4 +176,4 @@ If you encounter issues:
 
 ---
 
-**Happy automation!** HnH Scheduler is designed to make your Haven & Hearth experience more enjoyable by handling repetitive tasks automatically.
+**Happy automation!**

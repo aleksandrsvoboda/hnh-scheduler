@@ -5,10 +5,11 @@ import ScenarioLibrary from './components/ScenarioLibrary';
 import CharactersCredentials from './components/CharactersCredentials';
 import RunHistory from './components/RunHistory';
 import Settings from './components/Settings';
+import Help from './components/Help';
 import WindowControls from './components/WindowControls';
 import StatusIndicator from './components/StatusIndicator';
 
-type Screen = 'dashboard' | 'schedules' | 'scenarios' | 'characters' | 'history' | 'settings';
+type Screen = 'dashboard' | 'schedules' | 'scenarios' | 'characters' | 'history' | 'settings' | 'help';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
@@ -27,6 +28,8 @@ const App: React.FC = () => {
         return <RunHistory />;
       case 'settings':
         return <Settings />;
+      case 'help':
+        return <Help />;
       default:
         return <Dashboard />;
     }
@@ -80,6 +83,12 @@ const App: React.FC = () => {
               onClick={() => setCurrentScreen('settings')}
             >
               Settings
+            </div>
+            <div 
+              className={`nav-item ${currentScreen === 'help' ? 'active' : ''}`}
+              onClick={() => setCurrentScreen('help')}
+            >
+              Help
             </div>
           </nav>
           

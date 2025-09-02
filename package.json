@@ -61,8 +61,10 @@
             "x64"
           ]
         }
-      ],
-      "artifactName": "${productName} Setup.${ext}"
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}.${ext}"
     },
     "mac": {
       "target": [
@@ -100,7 +102,8 @@
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName} Setup.${ext}"
     },
     "publish": null
   },

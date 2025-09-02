@@ -5,19 +5,12 @@
       "Bash(npx tsc:*)",
       "Read(/C:\\Users\\imbecil\\hhautolauncher/**)",
       "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
-      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
-      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
-      "Read(/C:\\Users\\imbecil\\hhautolauncher\\src\\main\\java\\core\\hhrunner/**)",
       "Bash(npx asar pack:*)",
       "Bash(npm run build:*)",
       "Bash(npx asar extract:*)",
       "Bash(npx vite:*)",
-      "Read(C:\\Users\\imbecil\\nurgling2/**)",
       "Read(C:\\Users\\imbecil\\nurgling2\\src\\haven/**)",
-      "Read(C:\\Users\\imbecil\\nurgling2/**)",
-      "Read(C:\\Users\\imbecil\\nurgling2/**)",
-      "Read(C:\\Users\\imbecil\\nurgling2/**)",
-      "Read(C:\\Users\\imbecil\\nurgling2\\src\\haven/**)"
+      "Read(C:\\Users\\imbecil\\nurgling2/**)"
     ],
     "deny": [],
     "ask": []

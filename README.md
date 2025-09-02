@@ -12,7 +12,12 @@ A cross-platform Electron desktop application that runs scenarios on a schedule 
 - **Live updates** - Watch scenario files for changes with real-time UI updates
 - **Rich UI** - Dashboard, schedule editor, run history, and settings management
 
-## Quick Start
+## Usage:
+Download package for your system from Releases section
+
+Follow the usage guide: [Usage Guide](docs/starter-guide.md)
+
+## Quick Start (dev)
 
 1. **Install dependencies:**
    ```bash

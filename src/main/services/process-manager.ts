@@ -174,15 +174,7 @@ export class ProcessManager extends EventEmitter {
 
   private forceKillProcess(run: ProcessRun): void {
     try {
-      if (os.platform() === 'win32') {
-        // Windows: use taskkill
-        spawn('taskkill', ['/PID', run.process.pid!.toString(), '/T', '/F'], {
-          stdio: 'ignore'
-        });
-      } else {
-        // Unix: use SIGKILL
-        run.process.kill('SIGKILL');
-      }
+      run.process.kill('SIGKILL');
     } catch (error) {
       console.error(`Failed to force kill process ${run.process.pid}:`, error);
     }
@@ -225,7 +217,6 @@ export class ProcessManager extends EventEmitter {
 
   private setupTimeout(run: ProcessRun): void {
     run.timeout = setTimeout(() => {
-      
       try {
         run.process.kill('SIGINT');
         this.emit('run:timeout', { runId: run.runId, stage: 'graceful' });

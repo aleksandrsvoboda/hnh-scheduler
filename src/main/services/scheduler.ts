@@ -307,10 +307,20 @@ export class Scheduler extends EventEmitter {
     const nextRun = queue.shift()!;
     
     // Find the schedule and entry for this queued run
-    this.emit('run:dequeue-requested', {
-      entryId: nextRun.entryId,
-      characterId: nextRun.characterId
-    });
+    const job = this.jobs.get(nextRun.entryId);
+    if (job) {
+      // Check concurrency limits again before starting queued run
+      const globalLimit = this.getGlobalConcurrencyLimit();
+      const totalActiveRuns = this.getTotalActiveRuns();
+      
+      if (totalActiveRuns >= globalLimit) {
+        // Re-queue if we're still at global limit
+        queue.unshift(nextRun);
+        return;
+      }
+      
+      this.startRun(job.scheduleId, job.entry);
+    }
   }
 
   clearAllJobs(): void {

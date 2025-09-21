@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess, exec } from 'child_process';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import * as os from 'os';
@@ -156,10 +156,19 @@ export class ProcessManager extends EventEmitter {
       run.gracefulTimeout = undefined;
     }
 
-    // Send SIGINT first (graceful)
     try {
-      run.process.kill('SIGINT');
-      
+      if (os.platform() === 'win32') {
+        // Windows: taskkill verwenden
+        exec(`taskkill /PID ${run.process.pid} /T /F`, (err) => {
+          if (err) {
+            console.error(`taskkill failed for PID ${run.process.pid}:`, err);
+          }
+        });
+      } else {
+        // Linux/macOS: normal mit SIGINT
+        run.process.kill('SIGINT');
+      }
+
       // Force kill after 10 seconds if still running
       run.gracefulTimeout = setTimeout(() => {
         if (this.activeRuns.has(runId)) {
@@ -174,7 +183,15 @@ export class ProcessManager extends EventEmitter {
 
   private forceKillProcess(run: ProcessRun): void {
     try {
-      run.process.kill('SIGKILL');
+      if (os.platform() === 'win32') {
+        exec(`taskkill /PID ${run.process.pid} /T /F`, (err) => {
+          if (err) {
+            console.error(`force taskkill failed for PID ${run.process.pid}:`, err);
+          }
+        });
+      } else {
+        run.process.kill('SIGKILL');
+      }
     } catch (error) {
       console.error(`Failed to force kill process ${run.process.pid}:`, error);
     }
@@ -218,15 +235,23 @@ export class ProcessManager extends EventEmitter {
   private setupTimeout(run: ProcessRun): void {
     run.timeout = setTimeout(() => {
       try {
-        run.process.kill('SIGINT');
+        if (os.platform() === 'win32') {
+          exec(`taskkill /PID ${run.process.pid} /T /F`, (err) => {
+            if (err) {
+              console.error(`timeout taskkill failed for PID ${run.process.pid}:`, err);
+            }
+          });
+        } else {
+          run.process.kill('SIGINT');
+        }
+
         this.emit('run:timeout', { runId: run.runId, stage: 'graceful' });
-        
+
         // Force kill after 10 seconds
         run.gracefulTimeout = setTimeout(() => {
           this.forceKillProcess(run);
           this.emit('run:timeout', { runId: run.runId, stage: 'force' });
         }, 10000);
-        
       } catch (error) {
         console.error(`Failed to timeout run ${run.runId}:`, error);
         this.forceKillProcess(run);

@@ -10,7 +10,8 @@
       "Bash(npx asar extract:*)",
       "Bash(npx vite:*)",
       "Read(C:\\Users\\imbecil\\nurgling2\\src\\haven/**)",
-      "Read(C:\\Users\\imbecil\\nurgling2/**)"
+      "Read(C:\\Users\\imbecil\\nurgling2/**)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

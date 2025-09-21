@@ -23,7 +23,49 @@ permissions:
   actions: read
 
 jobs:
-  release:
+  bump-version:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+      version_number: ${{ steps.version.outputs.version_number }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Bump version
+        id: version
+        run: |
+          npm version ${{ github.event.inputs.release_type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Commit version bump
+        run: |
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git tag ${{ steps.version.outputs.new_version }}
+          git push origin HEAD --follow-tags
+
+  build:
+    needs: bump-version
     runs-on: ${{ matrix.os }}
     
     strategy:
@@ -41,6 +83,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.bump-version.outputs.new_version }}
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -81,48 +124,15 @@ jobs:
           retention-days: 5
           
   create-release:
-    needs: release
+    needs: [bump-version, build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
-          
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          
-      - name: Setup Python (for native dependencies)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-      - name: Bump version
-        id: version
-        run: |
-          npm version ${{ github.event.inputs.release_type }} --no-git-tag-version
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "new_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "version_number=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-      - name: Commit version bump
-        run: |
-          git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
-          git tag ${{ steps.version.outputs.new_version }}
-          git push origin HEAD --follow-tags
+          ref: ${{ needs.bump-version.outputs.new_version }}
           
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -140,12 +150,12 @@ jobs:
         run: |
           if [ -f CHANGELOG.md ]; then
             # Extract latest version changes from CHANGELOG.md
-            CHANGELOG_CONTENT=$(sed -n "/## \[${{ steps.version.outputs.version_number }}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+            CHANGELOG_CONTENT=$(sed -n "/## \[${{ needs.bump-version.outputs.version_number }}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
             if [ -z "$CHANGELOG_CONTENT" ]; then
-              CHANGELOG_CONTENT="Release ${{ steps.version.outputs.new_version }}"
+              CHANGELOG_CONTENT="Release ${{ needs.bump-version.outputs.new_version }}"
             fi
           else
-            CHANGELOG_CONTENT="Release ${{ steps.version.outputs.new_version }}"
+            CHANGELOG_CONTENT="Release ${{ needs.bump-version.outputs.new_version }}"
           fi
           
           # Write multiline content to output
@@ -157,8 +167,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.new_version }}
-          name: HnH Scheduler ${{ steps.version.outputs.new_version }}
+          tag_name: ${{ needs.bump-version.outputs.new_version }}
+          name: HnH Scheduler ${{ needs.bump-version.outputs.new_version }}
           body: |
             ${{ steps.changelog.outputs.content }}
             

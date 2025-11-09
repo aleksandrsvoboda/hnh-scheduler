@@ -14,6 +14,7 @@ const DEFAULT_CONFIG: Config = {
   isJava18: false,
   // Default window management settings
   autoMinimizeWindow: false,
+  minimizeToTray: false,
 };
 
 export class ConfigStore extends JsonStore<Config> {
@@ -75,6 +76,13 @@ export class ConfigStore extends JsonStore<Config> {
     await this.update(config => ({
       ...config,
       isJava18
+    }));
+  }
+
+  async updateMinimizeToTray(enabled: boolean): Promise<void> {
+    await this.update(config => ({
+      ...config,
+      minimizeToTray: enabled
     }));
   }
 }

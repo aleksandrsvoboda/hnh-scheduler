@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, Menu, Tray, nativeImage } from 'electron';
 import * as path from 'path';
 import { ConfigStore } from './stores/config-store';
 import { CredentialsStore } from './stores/credentials-store';
@@ -13,6 +13,8 @@ import { IPCManager } from './ipc';
 
 class HnHSchedulerApp {
   private mainWindow?: BrowserWindow;
+  private tray?: Tray;
+  public isQuitting = false;
   private configStore!: ConfigStore;
   private credentialsStore!: CredentialsStore;
   private charactersStore!: CharactersStore;
@@ -222,8 +224,15 @@ class HnHSchedulerApp {
       }
     });
 
+    // Create tray if enabled in config
+    await this.setupTray();
+
     this.mainWindow.on('close', (event) => {
-      // Allow normal close behavior - quit the app when window closes
+      if (!this.isQuitting && this.shouldMinimizeToTray()) {
+        event.preventDefault();
+        this.hideWindow();
+      }
+      // If isQuitting is true or tray not enabled, allow normal close behavior
     });
 
     this.mainWindow.on('closed', () => {
@@ -238,9 +247,108 @@ class HnHSchedulerApp {
     });
   }
 
-  async cleanup(): Promise<void> {
-    
+  private async setupTray(): Promise<void> {
+    const config = await this.configStore.load();
+    if (!config.minimizeToTray) {
+      return; // Tray not enabled
+    }
+
     try {
+      // Resolve tray icon path for both development and production
+      const trayIconPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'build', 'tray.png')
+        : path.join(__dirname, '../../build/tray.png');
+
+      // Create tray icon
+      const trayIcon = nativeImage.createFromPath(trayIconPath);
+      this.tray = new Tray(trayIcon);
+
+      // Set tray tooltip
+      this.tray.setToolTip('HnH Scheduler');
+
+      // Create tray context menu
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: 'Show HnH Scheduler',
+          click: () => {
+            this.showWindow();
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          click: () => {
+            this.quitApp();
+          }
+        }
+      ]);
+
+      this.tray.setContextMenu(contextMenu);
+
+      // Handle tray click to show/hide window
+      this.tray.on('click', () => {
+        if (this.mainWindow?.isVisible()) {
+          this.hideWindow();
+        } else {
+          this.showWindow();
+        }
+      });
+
+      // Handle double-click to show window (common pattern)
+      this.tray.on('double-click', () => {
+        this.showWindow();
+      });
+
+    } catch (error) {
+      console.error('Failed to create tray:', error);
+      // Tray creation failed, disable tray functionality
+      this.tray = undefined;
+    }
+  }
+
+  private shouldMinimizeToTray(): boolean {
+    return this.tray !== undefined;
+  }
+
+  private hideWindow(): void {
+    if (this.mainWindow) {
+      this.mainWindow.hide();
+      // Hide from taskbar when minimized to tray
+      if (process.platform !== 'darwin') {
+        this.mainWindow.setSkipTaskbar(true);
+      }
+    }
+  }
+
+  private showWindow(): void {
+    if (this.mainWindow) {
+      this.mainWindow.show();
+      this.mainWindow.focus();
+      // Show in taskbar when restored
+      if (process.platform !== 'darwin') {
+        this.mainWindow.setSkipTaskbar(false);
+      }
+    }
+  }
+
+  private quitApp(): void {
+    this.isQuitting = true;
+    app.quit();
+  }
+
+  public isTrayEnabled(): boolean {
+    const config = this.configStore?.get();
+    return config?.minimizeToTray === true;
+  }
+
+  async cleanup(): Promise<void> {
+
+    try {
+      // Destroy tray
+      if (this.tray) {
+        this.tray.destroy();
+        this.tray = undefined;
+      }
       // Stop scheduler
       if (this.scheduler) {
         this.scheduler.clearAllJobs();
@@ -288,9 +396,16 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  // On macOS, keep app running when all windows closed
+  if (process.platform === 'darwin') {
+    return;
+  }
+
+  // On other platforms, only quit if tray is not active
+  if (!hnhApp.isTrayEnabled()) {
     app.quit();
   }
+  // If tray is active, keep app running
 });
 
 app.on('activate', async () => {
@@ -300,6 +415,7 @@ app.on('activate', async () => {
 });
 
 app.on('before-quit', async () => {
+  hnhApp.isQuitting = true;
   await hnhApp.cleanup();
 });
 

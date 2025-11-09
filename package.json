@@ -24,6 +24,7 @@
       "dist/main/**/*",
       "dist/renderer/**/*",
       "dist/preload/**/*",
+      "build/**/*",
       "icon.png",
       "package.json",
       "!dist/win-unpacked/**/*",
@@ -42,7 +43,12 @@
       "!README.md",
       "!CLAUDE.md"
     ],
-    "asar": true,
+    "asar": {
+      "smartUnpack": true
+    },
+    "asarUnpack": [
+      "build/**/*"
+    ],
     "directories": {
       "buildResources": "build"
     },

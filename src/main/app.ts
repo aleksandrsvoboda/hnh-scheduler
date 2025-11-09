@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, Tray, nativeImage } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { ConfigStore } from './stores/config-store';
 import { CredentialsStore } from './stores/credentials-store';
 import { CharactersStore } from './stores/characters-store';
@@ -261,13 +262,38 @@ class HnHSchedulerApp {
     }
 
     try {
-      // Resolve tray icon path for both development and production
-      const trayIconPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'build', 'tray.png')
-        : path.join(__dirname, '../../build/tray.png');
+      // Resolve tray icon path with multiple fallback locations for production
+      let trayIconPath: string;
+      if (app.isPackaged) {
+        const possiblePaths = [
+          path.join(process.resourcesPath, 'build', 'tray.png'),
+          path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'tray.png'),
+          path.join(__dirname, '../build/tray.png'),
+          path.join(__dirname, '../../build/tray.png')
+        ];
+        trayIconPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+      } else {
+        trayIconPath = path.join(__dirname, '../../build/tray.png');
+      }
 
-      // Create tray icon
-      const trayIcon = nativeImage.createFromPath(trayIconPath);
+      // Create tray icon with fallback handling
+      let trayIcon = nativeImage.createFromPath(trayIconPath);
+
+      // If tray icon is empty, try fallback to main icon
+      if (trayIcon.isEmpty()) {
+        console.warn('Tray icon not found, using fallback icon');
+        const fallbackIconPath = app.isPackaged
+          ? path.join(process.resourcesPath, 'icon.png')
+          : path.join(__dirname, '../../icon.png');
+        trayIcon = nativeImage.createFromPath(fallbackIconPath);
+      }
+
+      // Resize icon if it's too large (tray icons should be small)
+      const iconSize = trayIcon.getSize();
+      if (iconSize.width > 32 || iconSize.height > 32) {
+        trayIcon = trayIcon.resize({ width: 22, height: 22 });
+      }
+
       this.tray = new Tray(trayIcon);
 
       // Set tray tooltip

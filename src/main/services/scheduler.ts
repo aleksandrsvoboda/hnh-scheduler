@@ -10,6 +10,7 @@ interface ScheduledJob {
   type: 'cron' | 'interval' | 'timeout';
   startedAt?: number; // When this job was created/started
   lastRunAt?: number; // When this job last executed
+  nextRunAt?: number; // When this job will next execute (stored at creation/update)
 }
 
 interface QueuedRun {
@@ -53,13 +54,40 @@ export class Scheduler extends EventEmitter {
     try {
       const job = this.createJob(schedule, entry);
       if (job) {
+        // Calculate the next execution time based on job type
+        let nextRunAt: number | undefined;
+
+        if (job.type === 'interval' && entry.cadence.type === 'every') {
+          const intervalMs = this.calculateInterval(entry.cadence.unit, entry.cadence.n);
+
+          if ((entry.cadence as any).startTimeISO) {
+            // For jobs with start time, calculate next occurrence
+            const startTimeStr = (entry.cadence as any).startTimeISO.replace('Z', '');
+            const startTime = new Date(startTimeStr);
+            const now = new Date();
+
+            let nextExecution = new Date(startTime);
+            while (nextExecution <= now) {
+              nextExecution = new Date(nextExecution.getTime() + intervalMs);
+            }
+            nextRunAt = nextExecution.getTime();
+          } else {
+            // For jobs without start time, next run is interval from now
+            nextRunAt = Date.now() + intervalMs;
+          }
+        } else if (job.type === 'timeout' && entry.cadence.type === 'once') {
+          // For once jobs, use the target time
+          nextRunAt = new Date((entry.cadence as any).atISO).getTime();
+        }
+
         this.jobs.set(entry.id, {
           entryId: entry.id,
           scheduleId: schedule.id,
           entry: entry,
           job: job.job,
           type: job.type,
-          startedAt: Date.now()
+          startedAt: Date.now(),
+          nextRunAt: nextRunAt
         });
       }
     } catch (error) {
@@ -163,10 +191,16 @@ export class Scheduler extends EventEmitter {
   }
 
   private handleTrigger(schedule: Schedule, entry: ScheduleEntry): void {
-    // Track when this job actually triggers for accurate next-run calculations
+    // Track when this job actually triggers and update next run time
     const job = this.jobs.get(entry.id);
     if (job) {
       job.lastRunAt = Date.now();
+
+      // Update next run time for repeating jobs
+      if (job.type === 'interval' && entry.cadence.type === 'every') {
+        const intervalMs = this.calculateInterval(entry.cadence.unit, entry.cadence.n);
+        job.nextRunAt = Date.now() + intervalMs;
+      }
     }
 
     // Check if this run is manually skipped
@@ -403,30 +437,19 @@ export class Scheduler extends EventEmitter {
           cadenceType = 'cron';
         }
 
-        // For interval jobs, calculate MULTIPLE future runs
+        // For interval jobs, use stored next execution time
         if (scheduledJob.type === 'interval') {
           const entry = scheduledJob.entry;
           if (entry.cadence.type === 'every') {
             const intervalMs = this.calculateInterval(entry.cadence.unit, entry.cadence.n);
-            
-            // Use actual last execution time if available, otherwise fallback to start time calculation
+
+            // Use the stored next execution time - this is the actual time the job will run
             let nextTime: Date;
 
-            if (scheduledJob.lastRunAt) {
-              // Use actual last execution time + interval for accurate display
-              nextTime = new Date(scheduledJob.lastRunAt + intervalMs);
-            } else if ((entry.cadence as any).startTimeISO) {
-              // Fallback: calculate from original start time (for jobs that haven't run yet)
-              const startTimeStr = (entry.cadence as any).startTimeISO.replace('Z', ''); // Remove Z to treat as local
-              const startTime = new Date(startTimeStr);
-
-              // Find the next occurrence after now based on original start time
-              nextTime = new Date(startTime);
-              while (nextTime <= now) {
-                nextTime = new Date(nextTime.getTime() + intervalMs);
-              }
+            if (scheduledJob.nextRunAt) {
+              nextTime = new Date(scheduledJob.nextRunAt);
             } else {
-              // No start time and no last run - use interval from now
+              // Fallback (shouldn't happen normally)
               nextTime = new Date(now.getTime() + intervalMs);
             }
 

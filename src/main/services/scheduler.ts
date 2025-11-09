@@ -163,6 +163,12 @@ export class Scheduler extends EventEmitter {
   }
 
   private handleTrigger(schedule: Schedule, entry: ScheduleEntry): void {
+    // Track when this job actually triggers for accurate next-run calculations
+    const job = this.jobs.get(entry.id);
+    if (job) {
+      job.lastRunAt = Date.now();
+    }
+
     // Check if this run is manually skipped
     if (this.isRunSkipped(schedule.id, entry.id)) {
       this.emit('run:skipped', {
@@ -403,31 +409,32 @@ export class Scheduler extends EventEmitter {
           if (entry.cadence.type === 'every') {
             const intervalMs = this.calculateInterval(entry.cadence.unit, entry.cadence.n);
             
-            // Check if there's a start time set
-            if ((entry.cadence as any).startTimeISO) {
+            // Use actual last execution time if available, otherwise fallback to start time calculation
+            let nextTime: Date;
+
+            if (scheduledJob.lastRunAt) {
+              // Use actual last execution time + interval for accurate display
+              nextTime = new Date(scheduledJob.lastRunAt + intervalMs);
+            } else if ((entry.cadence as any).startTimeISO) {
+              // Fallback: calculate from original start time (for jobs that haven't run yet)
               const startTimeStr = (entry.cadence as any).startTimeISO.replace('Z', ''); // Remove Z to treat as local
               const startTime = new Date(startTimeStr);
-              
+
               // Find the next occurrence after now based on original start time
-              let nextTime = new Date(startTime);
+              nextTime = new Date(startTime);
               while (nextTime <= now) {
                 nextTime = new Date(nextTime.getTime() + intervalMs);
               }
-              
-              // Generate multiple future runs within the look-ahead window
-              const endTime = new Date(now.getTime() + maxLookAhead);
-              while (nextTime <= endTime) {
-                runs.push(new Date(nextTime));
-                nextTime = new Date(nextTime.getTime() + intervalMs);
-              }
             } else {
-              // No start time - generate runs from now (fallback)
-              let nextTime = new Date(now.getTime() + intervalMs);
-              const endTime = new Date(now.getTime() + maxLookAhead);
-              while (nextTime <= endTime) {
-                runs.push(new Date(nextTime));
-                nextTime = new Date(nextTime.getTime() + intervalMs);
-              }
+              // No start time and no last run - use interval from now
+              nextTime = new Date(now.getTime() + intervalMs);
+            }
+
+            // Generate multiple future runs within the look-ahead window
+            const endTime = new Date(now.getTime() + maxLookAhead);
+            while (nextTime <= endTime) {
+              runs.push(new Date(nextTime));
+              nextTime = new Date(nextTime.getTime() + intervalMs);
             }
             cadenceType = `every ${entry.cadence.n} ${entry.cadence.unit}`;
           }

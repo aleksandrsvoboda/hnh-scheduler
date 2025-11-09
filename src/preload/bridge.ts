@@ -11,6 +11,7 @@ const api = {
     updateJavaPath: (javaPath: string): Promise<Config> => ipcRenderer.invoke('settings:updateJavaPath', javaPath),
     updateHafenPath: (hafenPath: string): Promise<Config> => ipcRenderer.invoke('settings:updateHafenPath', hafenPath),
     updateJavaVersion: (isJava18: boolean): Promise<Config> => ipcRenderer.invoke('settings:updateJavaVersion', isJava18),
+    updateMinimizeToTray: (enabled: boolean): Promise<Config> => ipcRenderer.invoke('settings:updateMinimizeToTray', enabled),
   },
 
   app: {

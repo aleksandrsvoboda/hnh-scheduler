@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, Menu, Tray, nativeImage } from 'electron';
 import * as path from 'path';
 import { ConfigStore } from './stores/config-store';
 import { CredentialsStore } from './stores/credentials-store';
@@ -13,6 +13,9 @@ import { IPCManager } from './ipc';
 
 class HnHSchedulerApp {
   private mainWindow?: BrowserWindow;
+  private tray?: Tray;
+  private trayUpdateInterval?: NodeJS.Timeout;
+  public isQuitting = false;
   private configStore!: ConfigStore;
   private credentialsStore!: CredentialsStore;
   private charactersStore!: CharactersStore;
@@ -54,6 +57,12 @@ class HnHSchedulerApp {
       await this.runHistory.initialize();
 
       this.scheduler = new Scheduler();
+
+      // Set up scheduler event listeners for tray updates
+      this.scheduler.on('run:requested', () => this.updateTrayMenuIfEnabled());
+      this.scheduler.on('run:skipped', () => this.updateTrayMenuIfEnabled());
+      this.scheduler.on('run:completed', () => this.updateTrayMenuIfEnabled());
+      this.scheduler.on('run:error', () => this.updateTrayMenuIfEnabled());
 
       // 5. Set up IPC (will be updated with window reference later)
       this.ipcManager = new IPCManager(
@@ -222,8 +231,15 @@ class HnHSchedulerApp {
       }
     });
 
+    // Create tray if enabled in config
+    await this.setupTray();
+
     this.mainWindow.on('close', (event) => {
-      // Allow normal close behavior - quit the app when window closes
+      if (!this.isQuitting && this.shouldMinimizeToTray()) {
+        event.preventDefault();
+        this.hideWindow();
+      }
+      // If isQuitting is true or tray not enabled, allow normal close behavior
     });
 
     this.mainWindow.on('closed', () => {
@@ -238,9 +254,197 @@ class HnHSchedulerApp {
     });
   }
 
-  async cleanup(): Promise<void> {
-    
+  private async setupTray(): Promise<void> {
+    const config = await this.configStore.load();
+    if (!config.minimizeToTray) {
+      return; // Tray not enabled
+    }
+
     try {
+      // Resolve tray icon path for both development and production
+      const trayIconPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'build', 'tray.png')
+        : path.join(__dirname, '../../build/tray.png');
+
+      // Create tray icon
+      const trayIcon = nativeImage.createFromPath(trayIconPath);
+      this.tray = new Tray(trayIcon);
+
+      // Set tray tooltip
+      this.tray.setToolTip('HnH Scheduler');
+
+      // Create initial tray context menu
+      this.updateTrayMenu();
+
+      // Update tray menu every 30 seconds to keep times current
+      this.trayUpdateInterval = setInterval(() => {
+        this.updateTrayMenu();
+      }, 30000);
+
+      // Handle tray click to show/hide window
+      this.tray.on('click', () => {
+        if (this.mainWindow?.isVisible()) {
+          this.hideWindow();
+        } else {
+          this.showWindow();
+        }
+      });
+
+      // Handle double-click to show window (common pattern)
+      this.tray.on('double-click', () => {
+        this.showWindow();
+      });
+
+    } catch (error) {
+      console.error('Failed to create tray:', error);
+      // Tray creation failed, disable tray functionality
+      this.tray = undefined;
+    }
+  }
+
+  private shouldMinimizeToTray(): boolean {
+    return this.tray !== undefined;
+  }
+
+  private hideWindow(): void {
+    if (this.mainWindow) {
+      this.mainWindow.hide();
+      // Hide from taskbar when minimized to tray
+      if (process.platform !== 'darwin') {
+        this.mainWindow.setSkipTaskbar(true);
+      }
+    }
+  }
+
+  private showWindow(): void {
+    if (this.mainWindow) {
+      this.mainWindow.show();
+      this.mainWindow.focus();
+      // Show in taskbar when restored
+      if (process.platform !== 'darwin') {
+        this.mainWindow.setSkipTaskbar(false);
+      }
+    }
+  }
+
+  private quitApp(): void {
+    this.isQuitting = true;
+    app.quit();
+  }
+
+  public isTrayEnabled(): boolean {
+    const config = this.configStore?.get();
+    return config?.minimizeToTray === true;
+  }
+
+  private updateTrayMenuIfEnabled(): void {
+    if (this.isTrayEnabled() && this.tray) {
+      this.updateTrayMenu();
+    }
+  }
+
+  private updateTrayMenu(): void {
+    if (!this.tray) return;
+
+    try {
+      // Get next 3 upcoming runs
+      const upcomingRuns = this.scheduler?.getUpcomingRuns(3) || [];
+
+      // Build menu items
+      const menuItems: any[] = [
+        {
+          label: 'Show HnH Scheduler',
+          click: () => {
+            this.showWindow();
+          }
+        }
+      ];
+
+      // Add upcoming runs section if any exist
+      if (upcomingRuns.length > 0) {
+        menuItems.push({ type: 'separator' });
+
+        // Add header for upcoming runs
+        menuItems.push({
+          label: 'Upcoming Runs:',
+          enabled: false
+        });
+
+        // Add each upcoming run
+        upcomingRuns.forEach(run => {
+          // Get scenario name
+          const scenarios = this.scenarioCatalog?.getScenarios() || [];
+          const scenario = scenarios.find(s => s.id === run.scenarioId);
+          const scenarioName = scenario?.name || `Scenario ${run.scenarioId}`;
+
+          // Format time (show as HH:MM:SS)
+          const runTime = new Date(run.nextRunAt);
+          const timeString = runTime.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+
+          menuItems.push({
+            label: `${scenarioName} - ${timeString}`,
+            enabled: false // Disabled - shows as grayed out, not clickable
+          });
+        });
+      }
+
+      // Add separator and quit option
+      menuItems.push(
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          click: () => {
+            this.quitApp();
+          }
+        }
+      );
+
+      // Build and set the menu
+      const contextMenu = Menu.buildFromTemplate(menuItems);
+      this.tray.setContextMenu(contextMenu);
+
+    } catch (error) {
+      console.error('Failed to update tray menu:', error);
+
+      // Fallback to basic menu
+      const basicMenu = Menu.buildFromTemplate([
+        {
+          label: 'Show HnH Scheduler',
+          click: () => {
+            this.showWindow();
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          click: () => {
+            this.quitApp();
+          }
+        }
+      ]);
+      this.tray.setContextMenu(basicMenu);
+    }
+  }
+
+  async cleanup(): Promise<void> {
+
+    try {
+      // Stop tray updates
+      if (this.trayUpdateInterval) {
+        clearInterval(this.trayUpdateInterval);
+        this.trayUpdateInterval = undefined;
+      }
+
+      // Destroy tray
+      if (this.tray) {
+        this.tray.destroy();
+        this.tray = undefined;
+      }
       // Stop scheduler
       if (this.scheduler) {
         this.scheduler.clearAllJobs();
@@ -288,9 +492,16 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  // On macOS, keep app running when all windows closed
+  if (process.platform === 'darwin') {
+    return;
+  }
+
+  // On other platforms, only quit if tray is not active
+  if (!hnhApp.isTrayEnabled()) {
     app.quit();
   }
+  // If tray is active, keep app running
 });
 
 app.on('activate', async () => {
@@ -300,6 +511,7 @@ app.on('activate', async () => {
 });
 
 app.on('before-quit', async () => {
+  hnhApp.isQuitting = true;
   await hnhApp.cleanup();
 });
 

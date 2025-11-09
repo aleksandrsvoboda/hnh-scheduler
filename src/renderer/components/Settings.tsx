@@ -135,6 +135,20 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleMinimizeToTrayChange = async (enabled: boolean) => {
+    try {
+      const updatedConfig = await window.api.settings.updateMinimizeToTray(enabled);
+      setConfig(updatedConfig);
+    } catch (error) {
+      console.error('Failed to update minimize to tray setting:', error);
+      showConfirmDialog(
+        'Update Failed',
+        `Failed to update minimize to tray setting: ${(error as Error).message}`,
+        () => {} // Just close the dialog
+      );
+    }
+  };
+
   const handleBrowseJavaPath = async () => {
     try {
       const filePath = await window.api.app.browseFile({
@@ -325,6 +339,24 @@ const Settings: React.FC = () => {
               </label>
               <p className="form-help">
                 Game windows will be minimized after launching.
+              </p>
+            </div>
+          </div>
+
+          <div className="form-checkbox-group">
+            <input
+              type="checkbox"
+              id="minimizeToTray"
+              checked={config.minimizeToTray || false}
+              onChange={(e) => handleMinimizeToTrayChange(e.target.checked)}
+            />
+            <div>
+              <label className="form-checkbox-label" htmlFor="minimizeToTray">
+                Minimize to system tray
+                <InfoTooltip text="When closing the app window, hide it to the system tray instead of quitting completely. Click the tray icon to restore the window or right-click to quit." />
+              </label>
+              <p className="form-help">
+                App will hide to tray instead of closing when you click the X button.
               </p>
             </div>
           </div>

@@ -11,6 +11,7 @@ export interface Config {
   isJava18?: boolean;
   // Window management
   autoMinimizeWindow?: boolean;
+  minimizeToTray?: boolean;
 }
 
 export interface ScenarioStep {

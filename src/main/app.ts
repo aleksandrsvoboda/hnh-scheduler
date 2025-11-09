@@ -266,11 +266,23 @@ class HnHSchedulerApp {
       let trayIconPath: string;
       if (app.isPackaged) {
         const possiblePaths = [
+          // First try root-level tray icon (most reliable)
+          path.join(process.resourcesPath, 'app.asar.unpacked', 'tray.png'),
+          path.join(process.resourcesPath, 'tray.png'),
+          // Then try build directory in resources
           path.join(process.resourcesPath, 'build', 'tray.png'),
           path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'tray.png'),
+          // Then try relative to current directory
+          path.join(__dirname, '../tray.png'),
+          path.join(__dirname, '../../tray.png'),
           path.join(__dirname, '../build/tray.png'),
-          path.join(__dirname, '../../build/tray.png')
+          path.join(__dirname, '../../build/tray.png'),
+          // Finally try main icon as tray icon
+          path.join(process.resourcesPath, 'icon.png'),
+          path.join(__dirname, '../icon.png'),
+          path.join(__dirname, '../../icon.png')
         ];
+
         trayIconPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
       } else {
         trayIconPath = path.join(__dirname, '../../build/tray.png');
@@ -281,10 +293,10 @@ class HnHSchedulerApp {
 
       // If tray icon is empty, try fallback to main icon
       if (trayIcon.isEmpty()) {
-        console.warn('Tray icon not found, using fallback icon');
         const fallbackIconPath = app.isPackaged
           ? path.join(process.resourcesPath, 'icon.png')
           : path.join(__dirname, '../../icon.png');
+
         trayIcon = nativeImage.createFromPath(fallbackIconPath);
       }
 

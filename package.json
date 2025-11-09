@@ -26,6 +26,7 @@
       "dist/preload/**/*",
       "build/**/*",
       "icon.png",
+      "tray.png",
       "package.json",
       "!dist/win-unpacked/**/*",
       "!dist/*.exe",
@@ -47,7 +48,8 @@
       "smartUnpack": true
     },
     "asarUnpack": [
-      "build/**/*"
+      "build/**/*",
+      "tray.png"
     ],
     "directories": {
       "buildResources": "build"

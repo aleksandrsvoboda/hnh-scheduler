@@ -4,6 +4,7 @@ import InfoTooltip from './InfoTooltip';
 
 const Settings: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null);
+  const [originalConfig, setOriginalConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -31,6 +32,7 @@ const Settings: React.FC = () => {
       setLoading(true);
       const currentConfig = await window.api.settings.get();
       setConfig(currentConfig);
+      setOriginalConfig(currentConfig); // Store original values for comparison
     } catch (error) {
       console.error('Failed to load config:', error);
     } finally {
@@ -55,11 +57,22 @@ const Settings: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!config) return;
+    if (!config || !originalConfig) return;
 
     try {
       setSaving(true);
+
+      // Check if auto-startup setting changed - use specific method for proper OS registration
+      if (config.autostartOnLogin !== originalConfig.autostartOnLogin) {
+        await window.api.settings.updateAutostartOnLogin(config.autostartOnLogin);
+      }
+
+      // Save all other settings using generic method
       await window.api.settings.set(config);
+
+      // Update original config to reflect saved state
+      setOriginalConfig(config);
+
       showConfirmDialog(
         'Settings Saved',
         'All settings have been saved successfully!',

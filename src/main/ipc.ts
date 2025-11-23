@@ -67,6 +67,11 @@ export class IPCManager {
       return this.configStore.get();
     });
 
+    ipcMain.handle('settings:updateAutostartOnLogin', async (_, enabled: boolean) => {
+      await this.configStore.updateAutostartOnLogin(enabled);
+      return this.configStore.get();
+    });
+
     ipcMain.handle('app:openDataDir', async () => {
       const config = this.configStore.get();
       const dataDir = config.dataDir || require('path').join(require('electron').app.getPath('userData'), '..', 'Haven and Hearth', 'autolauncher');

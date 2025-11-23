@@ -37,6 +37,9 @@ class HnHSchedulerApp {
       await this.configStore.load();
       const config = this.configStore.get();
 
+      // Sync auto-startup state with OS (in case settings got out of sync)
+      this.configStore.syncAutostartState();
+
       const dataDir = config.dataDir || app.getPath('userData');
 
       // 2. Load credentials, characters, and schedules

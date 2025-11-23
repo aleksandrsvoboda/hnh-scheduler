@@ -51,6 +51,32 @@ export class ConfigStore extends JsonStore<Config> {
       ...config,
       autostartOnLogin: enabled
     }));
+
+    // Apply the auto-startup setting to the OS
+    this.syncAutostartWithOS(enabled);
+  }
+
+  /**
+   * Synchronizes the auto-startup setting with the operating system
+   */
+  syncAutostartWithOS(enabled: boolean): void {
+    try {
+      app.setLoginItemSettings({
+        openAtLogin: enabled,
+        openAsHidden: enabled // Start minimized if auto-starting
+      });
+    } catch (error) {
+      console.error('Failed to set login item settings:', error);
+    }
+  }
+
+  /**
+   * Ensures the OS auto-startup state matches our stored configuration
+   * Should be called during app initialization
+   */
+  syncAutostartState(): void {
+    const config = this.get();
+    this.syncAutostartWithOS(config.autostartOnLogin);
   }
 
   async updateLogRetention(days: number): Promise<void> {

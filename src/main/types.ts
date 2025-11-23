@@ -12,6 +12,10 @@ export interface Config {
   // Window management
   autoMinimizeWindow?: boolean;
   minimizeToTray?: boolean;
+  // Screenshot configuration
+  timeoutScreenshots?: boolean;         // Enable/disable timeout screenshots
+  screenshotRetentionDays?: number;     // Cleanup policy for screenshots
+  screenshotTimeout?: number;           // Timeout for screenshot capture (ms)
 }
 
 export interface ScenarioStep {
@@ -103,6 +107,8 @@ export interface RunRecord {
   signal?: string;
   durationMs: number;
   error?: string;
+  screenshotPath?: string;      // Relative path to screenshot file
+  screenshotError?: string;     // Error message if screenshot failed
 }
 
 export interface ActiveRun {

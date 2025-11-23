@@ -132,6 +132,8 @@
     "chokidar": "^3.5.3",
     "keytar": "^7.9.0",
     "node-cron": "^3.0.2",
+    "node-screenshots": "^0.2.1",
+    "node-window-manager": "^2.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.0"

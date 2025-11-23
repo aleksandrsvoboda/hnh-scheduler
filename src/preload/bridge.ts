@@ -100,6 +100,20 @@ const api = {
     query: (filter?: HistoryFilter): Promise<RunRecord[]> => ipcRenderer.invoke('history:query', filter || {}),
   },
 
+  // Screenshots
+  screenshots: {
+    getFile: (relativePath: string): Promise<{ data: string; path: string }> =>
+      ipcRenderer.invoke('screenshot:getFile', relativePath),
+    getStats: (days?: number): Promise<{
+      totalScreenshots: number;
+      totalSizeMB: number;
+      oldestDate: string | null;
+      newestDate: string | null;
+    }> => ipcRenderer.invoke('screenshot:getStats', days),
+    openFolder: (relativePath: string): Promise<void> =>
+      ipcRenderer.invoke('screenshot:openFolder', relativePath),
+  },
+
   // Skip functionality  
   skip: {
     set: (scheduleId: string, entryId: string): Promise<void> => ipcRenderer.invoke('skip:set', scheduleId, entryId),

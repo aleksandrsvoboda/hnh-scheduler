@@ -7,6 +7,20 @@ const RunHistory: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<HistoryFilter>({});
+  const [screenshotModal, setScreenshotModal] = useState<{
+    isOpen: boolean;
+    imageSrc: string | null;
+    loading: boolean;
+    error: string | null;
+    recordInfo: { ts: string; scenario: string; character: string } | null;
+    screenshotPath?: string;
+  }>({
+    isOpen: false,
+    imageSrc: null,
+    loading: false,
+    error: null,
+    recordInfo: null
+  });
 
   useEffect(() => {
     loadData();
@@ -102,6 +116,94 @@ const RunHistory: React.FC = () => {
   const getCharacterName = (characterId: string) => {
     const character = characters.find(c => c.id === characterId);
     return character ? character.name : characterId;
+  };
+
+  const openScreenshotModal = async (record: RunRecord) => {
+    if (!record.screenshotPath) return;
+
+    setScreenshotModal({
+      isOpen: true,
+      imageSrc: null,
+      loading: true,
+      error: null,
+      recordInfo: {
+        ts: record.ts,
+        scenario: getScenarioName(record.scenarioId),
+        character: getCharacterName(record.characterId)
+      }
+    });
+
+    try {
+      const result = await window.api.screenshots.getFile(record.screenshotPath);
+      setScreenshotModal(prev => ({
+        ...prev,
+        imageSrc: `data:image/png;base64,${result.data}`,
+        screenshotPath: record.screenshotPath,
+        loading: false
+      }));
+    } catch (error) {
+      setScreenshotModal(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Failed to load screenshot'
+      }));
+    }
+  };
+
+  const closeScreenshotModal = () => {
+    setScreenshotModal({
+      isOpen: false,
+      imageSrc: null,
+      loading: false,
+      error: null,
+      recordInfo: null,
+      screenshotPath: undefined
+    });
+  };
+
+  const openScreenshotFolder = async () => {
+    if (!screenshotModal.screenshotPath) return;
+
+    try {
+      await window.api.screenshots.openFolder(screenshotModal.screenshotPath);
+    } catch (error) {
+      console.error('Failed to open screenshot folder:', error);
+    }
+  };
+
+  const renderScreenshotCell = (record: RunRecord) => {
+    if (record.screenshotPath) {
+      return (
+        <button
+          className="btn btn-sm btn-outline-primary"
+          onClick={() => openScreenshotModal(record)}
+          title="View timeout screenshot"
+        >
+          📷 View
+        </button>
+      );
+    }
+
+    if (record.screenshotError) {
+      return (
+        <span
+          className="text-muted"
+          title={`Screenshot failed: ${record.screenshotError}`}
+        >
+          📷 Error
+        </span>
+      );
+    }
+
+    if (record.status === 'timeout') {
+      return (
+        <span className="text-muted">
+          📷 None
+        </span>
+      );
+    }
+
+    return '-';
   };
 
   return (
@@ -218,6 +320,7 @@ const RunHistory: React.FC = () => {
                     <th>Character</th>
                     <th>Status</th>
                     <th>Duration</th>
+                    <th>Screenshot</th>
                     <th>Exit Code</th>
                   </tr>
                 </thead>
@@ -234,6 +337,9 @@ const RunHistory: React.FC = () => {
                       </td>
                       <td>{formatDuration(record.durationMs)}</td>
                       <td>
+                        {renderScreenshotCell(record)}
+                      </td>
+                      <td>
                         {record.exitCode !== undefined ? (
                           <code>{record.exitCode}</code>
                         ) : record.signal ? (
@@ -248,6 +354,97 @@ const RunHistory: React.FC = () => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Screenshot Modal */}
+      {screenshotModal.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={closeScreenshotModal}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '20px',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>Timeout Screenshot</h3>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {screenshotModal.screenshotPath && (
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={openScreenshotFolder}
+                    style={{ padding: '4px 12px' }}
+                    title="Open folder containing screenshot"
+                  >
+                    📁 Open Folder
+                  </button>
+                )}
+                <button
+                  className="btn btn-secondary"
+                  onClick={closeScreenshotModal}
+                  style={{ padding: '4px 12px' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {screenshotModal.recordInfo && (
+              <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
+                <div><strong>Time:</strong> {formatDateTime(screenshotModal.recordInfo.ts)}</div>
+                <div><strong>Scenario:</strong> {screenshotModal.recordInfo.scenario}</div>
+                <div><strong>Character:</strong> {screenshotModal.recordInfo.character}</div>
+              </div>
+            )}
+
+            {screenshotModal.loading && (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div className="spinner"></div>
+                <p style={{ marginTop: '16px' }}>Loading screenshot...</p>
+              </div>
+            )}
+
+            {screenshotModal.error && (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#dc3545' }}>
+                <p><strong>Error loading screenshot:</strong></p>
+                <p>{screenshotModal.error}</p>
+              </div>
+            )}
+
+            {screenshotModal.imageSrc && !screenshotModal.loading && (
+              <div style={{ textAlign: 'center' }}>
+                <img
+                  src={screenshotModal.imageSrc}
+                  alt="Timeout Screenshot"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

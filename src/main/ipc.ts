@@ -7,6 +7,7 @@ import { ScenarioCatalog } from './services/scenario-catalog';
 import { CredentialVault } from './services/credential-vault';
 import { ProcessManager } from './services/process-manager';
 import { RunHistory } from './services/run-history';
+import { ScreenshotService } from './services/screenshot-service';
 import { Scheduler } from './services/scheduler';
 import { Config, Schedule, Character, CredentialRef, HistoryFilter, RunRecord } from './types';
 
@@ -20,6 +21,7 @@ export class IPCManager {
     private credentialVault: CredentialVault,
     private processManager: ProcessManager,
     private runHistory: RunHistory,
+    private screenshotService: ScreenshotService,
     private scheduler: Scheduler,
     private mainWindow?: BrowserWindow
   ) {
@@ -314,6 +316,47 @@ export class IPCManager {
     // History
     ipcMain.handle('history:query', async (_, filter: HistoryFilter) => {
       return await this.runHistory.query(filter);
+    });
+
+    // Screenshots
+    ipcMain.handle('screenshot:getFile', async (_, relativePath: string) => {
+      if (!relativePath?.trim()) {
+        throw new Error('Screenshot path is required');
+      }
+
+      const fullPath = this.screenshotService.getScreenshotPath(relativePath);
+
+      try {
+        // Check if file exists and read it
+        const fs = await import('fs/promises');
+        const data = await fs.readFile(fullPath);
+        return {
+          data: data.toString('base64'),
+          path: relativePath
+        };
+      } catch (error) {
+        throw new Error(`Failed to read screenshot: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    });
+
+    ipcMain.handle('screenshot:getStats', async (_, days: number = 7) => {
+      return await this.screenshotService.getScreenshotStats(days);
+    });
+
+    ipcMain.handle('screenshot:openFolder', async (_, relativePath: string) => {
+      if (!relativePath?.trim()) {
+        throw new Error('Screenshot path is required');
+      }
+
+      const fullPath = this.screenshotService.getScreenshotPath(relativePath);
+      const folderPath = require('path').dirname(fullPath);
+
+      try {
+        await shell.showItemInFolder(fullPath);
+      } catch (error) {
+        // Fallback to opening the folder if showing the item fails
+        await shell.openPath(folderPath);
+      }
     });
 
     // Skip functionality

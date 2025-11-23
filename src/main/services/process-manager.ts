@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as os from 'os';
 import { ActiveRun, RunRecord, Scenario, Character } from '../types';
 import { CredentialVault, CredentialSecret } from './credential-vault';
+import { ScreenshotService, ScreenshotResult } from './screenshot-service';
 
 export interface ProcessRun {
   runId: string;
@@ -18,13 +19,19 @@ export interface ProcessRun {
   timeout?: NodeJS.Timeout;
   gracefulTimeout?: NodeJS.Timeout;
   configFilePath?: string; // Path to temporary bot config file
+  screenshotResult?: ScreenshotResult; // Result of timeout screenshot attempt
+  isTimeoutTermination?: boolean; // Flag to track timeout-initiated terminations
 }
 
 export class ProcessManager extends EventEmitter {
   private activeRuns = new Map<string, ProcessRun>();
   private readonly MAX_LOG_BUFFER_LINES = 1000;
 
-  constructor(private credentialVault: CredentialVault, private getConfig: () => any) {
+  constructor(
+    private credentialVault: CredentialVault,
+    private getConfig: () => any,
+    private screenshotService?: ScreenshotService
+  ) {
     super();
   }
 
@@ -234,29 +241,88 @@ export class ProcessManager extends EventEmitter {
 
   private setupTimeout(run: ProcessRun): void {
     run.timeout = setTimeout(() => {
-      try {
-        if (os.platform() === 'win32') {
-          exec(`taskkill /PID ${run.process.pid} /T /F`, (err) => {
-            if (err) {
-              console.error(`timeout taskkill failed for PID ${run.process.pid}:`, err);
+      // Mark this run as being terminated due to timeout
+      run.isTimeoutTermination = true;
+
+      // Attempt to capture screenshot before killing process (non-blocking)
+      this.captureTimeoutScreenshot(run).catch(error => {
+        console.error(`[ProcessManager] Screenshot capture failed for run ${run.runId}:`, error);
+      });
+
+      // Proceed with process termination after a brief delay for screenshot
+      setTimeout(() => {
+        try {
+          if (os.platform() === 'win32') {
+            exec(`taskkill /PID ${run.process.pid} /T /F`, (err) => {
+              if (err) {
+                console.error(`timeout taskkill failed for PID ${run.process.pid}:`, err);
+              }
+            });
+          } else {
+            run.process.kill('SIGINT');
+          }
+
+          this.emit('run:timeout', { runId: run.runId, stage: 'graceful' });
+
+          // Force kill after 10 seconds if process doesn't exit
+          run.gracefulTimeout = setTimeout(() => {
+            if (this.activeRuns.has(run.runId)) {
+              this.forceKillProcess(run);
+              this.emit('run:timeout', { runId: run.runId, stage: 'force' });
             }
-          });
-        } else {
-          run.process.kill('SIGINT');
-        }
-
-        this.emit('run:timeout', { runId: run.runId, stage: 'graceful' });
-
-        // Force kill after 10 seconds
-        run.gracefulTimeout = setTimeout(() => {
+          }, 10000);
+        } catch (error) {
+          console.error(`Failed to timeout run ${run.runId}:`, error);
           this.forceKillProcess(run);
-          this.emit('run:timeout', { runId: run.runId, stage: 'force' });
-        }, 10000);
-      } catch (error) {
-        console.error(`Failed to timeout run ${run.runId}:`, error);
-        this.forceKillProcess(run);
-      }
+        }
+      }, 100); // Brief delay to allow screenshot capture to start
     }, run.maxDurationMs);
+  }
+
+  private async captureTimeoutScreenshot(run: ProcessRun): Promise<void> {
+    // Skip if screenshot service is not available
+    if (!this.screenshotService) {
+      run.screenshotResult = {
+        success: false,
+        error: 'Screenshot service not available'
+      };
+      return;
+    }
+
+    try {
+      const config = this.getConfig();
+
+      // Check if timeout screenshots are enabled
+      if (!config.timeoutScreenshots) {
+        run.screenshotResult = {
+          success: false,
+          error: 'Screenshots disabled in configuration'
+        };
+        return;
+      }
+
+      // Capture screenshot with configurable timeout
+      const screenshotTimeout = config.screenshotTimeout || 3000;
+      const result = await this.screenshotService.captureTimeoutScreenshot({
+        runId: run.runId,
+        targetWindowTitle: 'Haven and Hearth',
+        targetProcessName: 'java',
+        timeout: screenshotTimeout
+      });
+
+      // Store result in the run object
+      run.screenshotResult = result;
+
+    } catch (error) {
+      const errorMessage = `Screenshot capture error: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(`[ProcessManager] ${errorMessage}`);
+
+      // Store the error result
+      run.screenshotResult = {
+        success: false,
+        error: errorMessage
+      };
+    }
   }
 
   private handleProcessExit(runId: string, code: number | null, signal: NodeJS.Signals | null): void {
@@ -275,7 +341,14 @@ export class ProcessManager extends EventEmitter {
     const durationMs = endTime.getTime() - run.startedAt.getTime();
     
     let status: RunRecord['status'] = 'success';
-    if (signal === 'SIGINT' || signal === 'SIGKILL' || signal === 'SIGTERM') {
+
+    // Check if this was a timeout termination (more reliable than duration check)
+    const isTimeoutTermination = run.isTimeoutTermination || false;
+
+    if (isTimeoutTermination) {
+      status = 'timeout';
+    } else if (signal === 'SIGINT' || signal === 'SIGKILL' || signal === 'SIGTERM') {
+      // Fallback to duration check for signal-based terminations
       status = durationMs >= run.maxDurationMs ? 'timeout' : 'killed';
     } else if (code !== 0) {
       status = 'error';
@@ -291,7 +364,9 @@ export class ProcessManager extends EventEmitter {
       status,
       exitCode: code || undefined,
       signal: signal || undefined,
-      durationMs
+      durationMs,
+      screenshotPath: run.screenshotResult?.success ? run.screenshotResult.filePath : undefined,
+      screenshotError: run.screenshotResult && !run.screenshotResult.success ? run.screenshotResult.error : undefined
     };
 
     // Clean up temporary config file

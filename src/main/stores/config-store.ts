@@ -15,6 +15,10 @@ const DEFAULT_CONFIG: Config = {
   // Default window management settings
   autoMinimizeWindow: false,
   minimizeToTray: false,
+  // Default screenshot configuration
+  timeoutScreenshots: true,         // Enable by default for debugging
+  screenshotRetentionDays: 14,      // Same as log retention by default
+  screenshotTimeout: 3000,          // 3 seconds default
 };
 
 export class ConfigStore extends JsonStore<Config> {

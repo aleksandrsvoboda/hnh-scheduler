@@ -363,6 +363,62 @@ const Settings: React.FC = () => {
 
         </div>
 
+        {/* Screenshot Settings */}
+        <div className="settings-section">
+          <h3>Screenshot Settings</h3>
+
+          <div className="form-checkbox-group">
+            <input
+              type="checkbox"
+              id="timeoutScreenshots"
+              checked={config.timeoutScreenshots || false}
+              onChange={(e) => handleConfigChange('timeoutScreenshots', e.target.checked)}
+            />
+            <div>
+              <label className="form-checkbox-label" htmlFor="timeoutScreenshots">
+                Enable timeout screenshots
+                <InfoTooltip text="Automatically capture a screenshot of the game window when a run is killed due to timeout. Screenshots are stored locally and can be viewed in the run history." />
+              </label>
+              <p className="form-help">
+                Screenshots will be taken before terminating timed-out runs for debugging purposes.
+              </p>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              Screenshot capture timeout (seconds)
+              <InfoTooltip text="Maximum time to wait when capturing a screenshot before giving up. If the screenshot cannot be captured within this time, the process will be killed anyway." />
+            </label>
+            <input
+              type="number"
+              className="form-input"
+              value={Math.round((config.screenshotTimeout || 3000) / 1000)}
+              onChange={(e) => handleConfigChange('screenshotTimeout', parseInt(e.target.value) * 1000)}
+              min="1"
+              max="10"
+              disabled={!config.timeoutScreenshots}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              Screenshot retention (days)
+              <InfoTooltip text="Number of days to keep screenshot files. Older screenshots will be automatically deleted. Leave empty to use the same retention as run history logs." />
+            </label>
+            <input
+              type="number"
+              className="form-input"
+              value={config.screenshotRetentionDays || ''}
+              onChange={(e) => handleConfigChange('screenshotRetentionDays', e.target.value ? parseInt(e.target.value) : undefined)}
+              min="1"
+              max="365"
+              placeholder={`Default: ${config.logRetentionDays} days`}
+              disabled={!config.timeoutScreenshots}
+            />
+          </div>
+        </div>
+
         {/* System Settings */}
         <div className="settings-section">
           <h3>System Settings</h3>

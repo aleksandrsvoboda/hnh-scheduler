@@ -9,6 +9,7 @@ import { ScenarioCatalog } from './services/scenario-catalog';
 import { CredentialVault } from './services/credential-vault';
 import { ProcessManager } from './services/process-manager';
 import { RunHistory } from './services/run-history';
+import { ScreenshotService } from './services/screenshot-service';
 import { Scheduler } from './services/scheduler';
 import { IPCManager } from './ipc';
 
@@ -25,6 +26,7 @@ class HnHSchedulerApp {
   private credentialVault!: CredentialVault;
   private processManager!: ProcessManager;
   private runHistory!: RunHistory;
+  private screenshotService!: ScreenshotService;
   private scheduler!: Scheduler;
   private ipcManager!: IPCManager;
 
@@ -53,7 +55,16 @@ class HnHSchedulerApp {
 
       // 4. Initialize services
       this.credentialVault = new CredentialVault();
-      this.processManager = new ProcessManager(this.credentialVault, () => this.configStore.get());
+
+      // Initialize screenshot service
+      this.screenshotService = new ScreenshotService(dataDir);
+      await this.screenshotService.initialize();
+
+      this.processManager = new ProcessManager(
+        this.credentialVault,
+        () => this.configStore.get(),
+        this.screenshotService
+      );
       this.runHistory = new RunHistory(dataDir);
       await this.runHistory.initialize();
 
@@ -75,6 +86,7 @@ class HnHSchedulerApp {
         this.credentialVault,
         this.processManager,
         this.runHistory,
+        this.screenshotService,
         this.scheduler
       );
 
@@ -125,13 +137,20 @@ class HnHSchedulerApp {
   }
 
   private schedulePeriodicTasks(): void {
-    // Prune old logs daily
+    // Prune old logs and screenshots daily
     const pruneInterval = setInterval(async () => {
       try {
         const config = this.configStore.get();
+
+        // Prune old run history logs
         await this.runHistory.pruneOldLogs(config.logRetentionDays);
+
+        // Prune old screenshots (use screenshot retention days or fall back to log retention)
+        const screenshotRetentionDays = config.screenshotRetentionDays ?? config.logRetentionDays;
+        await this.screenshotService.pruneOldScreenshots(screenshotRetentionDays);
+
       } catch (error) {
-        console.error('Failed to prune old logs:', error);
+        console.error('Failed to prune old files:', error);
       }
     }, 24 * 60 * 60 * 1000); // 24 hours
 

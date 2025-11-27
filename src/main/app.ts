@@ -152,6 +152,9 @@ class HnHSchedulerApp {
         const screenshotRetentionDays = config.screenshotRetentionDays ?? config.logRetentionDays;
         await this.screenshotService.pruneOldScreenshots(screenshotRetentionDays);
 
+        // Clean up orphaned stack trace temp files (safety net)
+        await this.cleanupOrphanedTempFiles();
+
       } catch (error) {
         console.error('Failed to prune old files:', error);
       }
@@ -161,6 +164,41 @@ class HnHSchedulerApp {
     app.on('before-quit', () => {
       clearInterval(pruneInterval);
     });
+  }
+
+  private async cleanupOrphanedTempFiles(): Promise<void> {
+    try {
+      const os = require('os');
+      const tmpDir = os.tmpdir();
+      const files = fs.readdirSync(tmpDir);
+
+      // Find orphaned stack trace temp files older than 24 hours
+      const orphanedFiles = files.filter(file =>
+        file.startsWith('stack_trace-') &&
+        (file.endsWith('.json') || file.endsWith('.json.tmp')) &&
+        this.isFileOlderThan(path.join(tmpDir, file), 24 * 60 * 60 * 1000)
+      );
+
+      for (const file of orphanedFiles) {
+        try {
+          fs.unlinkSync(path.join(tmpDir, file));
+          console.log(`Cleaned up orphaned stack trace file: ${file}`);
+        } catch (error) {
+          console.error(`Failed to cleanup orphaned file ${file}:`, error);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to cleanup orphaned temp files:', error);
+    }
+  }
+
+  private isFileOlderThan(filePath: string, maxAgeMs: number): boolean {
+    try {
+      const stats = fs.statSync(filePath);
+      return Date.now() - stats.mtime.getTime() > maxAgeMs;
+    } catch {
+      return true; // If we can't stat it, consider it old
+    }
   }
 
   async createMainWindow(): Promise<void> {

@@ -14,6 +14,7 @@ const RunHistory: React.FC = () => {
     error: string | null;
     recordInfo: { ts: string; scenario: string; character: string } | null;
     screenshotPath?: string;
+    runRecord?: RunRecord;
   }>({
     isOpen: false,
     imageSrc: null,
@@ -130,7 +131,8 @@ const RunHistory: React.FC = () => {
         ts: record.ts,
         scenario: getScenarioName(record.scenarioId),
         character: getCharacterName(record.characterId)
-      }
+      },
+      runRecord: record
     });
 
     try {
@@ -157,8 +159,19 @@ const RunHistory: React.FC = () => {
       loading: false,
       error: null,
       recordInfo: null,
-      screenshotPath: undefined
+      screenshotPath: undefined,
+      runRecord: undefined
     });
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
+  const extractMethodName = (stackTrace: string) => {
+    // Extract just the method name from full stack trace
+    const match = stackTrace.match(/\.([^.]+\([^)]*\))/);
+    return match ? match[1] : stackTrace;
   };
 
   const openScreenshotFolder = async () => {
@@ -442,6 +455,96 @@ const RunHistory: React.FC = () => {
                     borderRadius: '4px'
                   }}
                 />
+              </div>
+            )}
+
+            {/* Stack Trace Section */}
+            {screenshotModal.runRecord && screenshotModal.runRecord.lastStackTrace && (
+              <div style={{
+                marginTop: '24px',
+                background: '#f8f9fa',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: '4px solid #dc3545'
+              }}>
+                <h4 style={{ margin: '0 0 12px 0', color: '#dc3545', fontWeight: 600 }}>
+                  Last Known Execution
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
+                      Bot:
+                    </span>
+                    <span style={{ flex: 1 }}>
+                      {screenshotModal.runRecord.stackTraceBotName || 'Unknown'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
+                      Method:
+                    </span>
+                    <span style={{
+                      flex: 1,
+                      fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                      background: '#e9ecef',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontSize: '14px'
+                    }}>
+                      {extractMethodName(screenshotModal.runRecord.lastStackTrace)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
+                      Full Stack:
+                    </span>
+                    <code style={{
+                      background: '#2d3748',
+                      color: '#e2e8f0',
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                      fontSize: '12px',
+                      lineHeight: 1.4,
+                      wordBreak: 'break-all',
+                      display: 'block',
+                      marginTop: '4px',
+                      flex: 1
+                    }}>
+                      {screenshotModal.runRecord.lastStackTrace}
+                    </code>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
+                      Captured:
+                    </span>
+                    <span style={{ flex: 1 }}>
+                      {formatTimestamp(screenshotModal.runRecord.stackTraceTimestamp || '')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Fallback for runs without stack trace */}
+            {screenshotModal.runRecord && !screenshotModal.runRecord.lastStackTrace && (
+              <div style={{
+                marginTop: '24px',
+                background: '#f8f9fa',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: '4px solid #6c757d',
+                textAlign: 'center'
+              }}>
+                <h4 style={{ margin: '0 0 8px 0', color: '#6c757d' }}>
+                  Execution Context
+                </h4>
+                <p style={{ margin: '0', fontStyle: 'italic' }}>
+                  Stack trace not available for this run
+                </p>
+                <small style={{ color: '#6c757d' }}>
+                  This feature was added after this run occurred, or stack trace capture failed.
+                </small>
               </div>
             )}
           </div>

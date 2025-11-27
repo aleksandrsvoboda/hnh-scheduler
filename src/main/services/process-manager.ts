@@ -19,6 +19,8 @@ export interface ProcessRun {
   timeout?: NodeJS.Timeout;
   gracefulTimeout?: NodeJS.Timeout;
   configFilePath?: string; // Path to temporary bot config file
+  stackTraceFile?: string; // Path to temporary stack trace file
+  stackTraceData?: any; // Parsed stack trace data for timeout runs
   screenshotResult?: ScreenshotResult; // Result of timeout screenshot attempt
   isTimeoutTermination?: boolean; // Flag to track timeout-initiated terminations
 }
@@ -54,19 +56,24 @@ export class ProcessManager extends EventEmitter {
     const os = require('os');
     const fs = require('fs');
     const path = require('path');
-    
+
     const tempDir = os.tmpdir();
     const configFileName = `bot_config-${runId}.json`;
     const configFilePath = path.join(tempDir, configFileName);
-    
-    // Write bot config file with credentials and scenario info
+
+    // Create stack trace file path for debugging timeout scenarios
+    const stackTraceFileName = `stack_trace-${runId}.json`;
+    const stackTraceFilePath = path.join(tempDir, stackTraceFileName);
+
+    // Write bot config file with credentials, scenario info, and stack trace file path
     const botConfig = {
       user: credentials?.username || '',
-      password: credentials?.password || '', 
+      password: credentials?.password || '',
       character: character.name,
-      scenarioId: scenario.id
+      scenarioId: scenario.id,
+      stackTraceFile: stackTraceFilePath
     };
-    
+
     fs.writeFileSync(configFilePath, JSON.stringify(botConfig, null, 2), 'utf8');
 
     // Use Hafen client command like the old app with configurable paths
@@ -114,7 +121,8 @@ export class ProcessManager extends EventEmitter {
       character,
       credentials,
       logBuffer: [],
-      configFilePath
+      configFilePath,
+      stackTraceFile: stackTraceFilePath
     };
 
     this.activeRuns.set(runId, run);
@@ -249,7 +257,12 @@ export class ProcessManager extends EventEmitter {
         console.error(`[ProcessManager] Screenshot capture failed for run ${run.runId}:`, error);
       });
 
-      // Proceed with process termination after a brief delay for screenshot
+      // Attempt to read stack trace before killing process (non-blocking)
+      this.captureStackTrace(run).catch(error => {
+        console.error(`[ProcessManager] Stack trace capture failed for run ${run.runId}:`, error);
+      });
+
+      // Proceed with process termination after a brief delay for screenshot and stack trace
       setTimeout(() => {
         try {
           if (os.platform() === 'win32') {
@@ -325,6 +338,70 @@ export class ProcessManager extends EventEmitter {
     }
   }
 
+  private async captureStackTrace(run: ProcessRun): Promise<void> {
+    // Skip if stack trace file path is not available
+    if (!run.stackTraceFile) {
+      return;
+    }
+
+    try {
+      const fs = require('fs');
+
+      // Check if stack trace file exists
+      if (!fs.existsSync(run.stackTraceFile)) {
+        return;
+      }
+
+      // Read and parse stack trace file
+      const content = fs.readFileSync(run.stackTraceFile, 'utf8');
+      const stackTraceData = JSON.parse(content);
+
+      // Store stack trace data in the run object for later use in RunRecord
+      run.stackTraceData = stackTraceData;
+
+    } catch (error) {
+      console.warn(`[ProcessManager] Failed to read stack trace for run ${run.runId}:`, error);
+    }
+  }
+
+  private cleanupTempFiles(run: ProcessRun): void {
+    const fs = require('fs');
+
+    // Clean up bot config file
+    if (run.configFilePath) {
+      try {
+        if (fs.existsSync(run.configFilePath)) {
+          fs.unlinkSync(run.configFilePath);
+        }
+      } catch (error) {
+        console.error(`Failed to delete config file ${run.configFilePath}:`, error);
+      }
+    }
+
+    // Clean up stack trace file
+    if (run.stackTraceFile) {
+      try {
+        if (fs.existsSync(run.stackTraceFile)) {
+          fs.unlinkSync(run.stackTraceFile);
+        }
+      } catch (error) {
+        console.error(`Failed to delete stack trace file ${run.stackTraceFile}:`, error);
+      }
+    }
+
+    // Clean up potential .tmp files
+    if (run.stackTraceFile) {
+      try {
+        const tempFile = run.stackTraceFile + '.tmp';
+        if (fs.existsSync(tempFile)) {
+          fs.unlinkSync(tempFile);
+        }
+      } catch (error) {
+        console.error(`Failed to delete temp stack trace file:`, error);
+      }
+    }
+  }
+
   private handleProcessExit(runId: string, code: number | null, signal: NodeJS.Signals | null): void {
     const run = this.activeRuns.get(runId);
     if (!run) return;
@@ -366,20 +443,15 @@ export class ProcessManager extends EventEmitter {
       signal: signal || undefined,
       durationMs,
       screenshotPath: run.screenshotResult?.success ? run.screenshotResult.filePath : undefined,
-      screenshotError: run.screenshotResult && !run.screenshotResult.success ? run.screenshotResult.error : undefined
+      screenshotError: run.screenshotResult && !run.screenshotResult.success ? run.screenshotResult.error : undefined,
+      // Stack trace fields for timeout debugging
+      lastStackTrace: run.stackTraceData?.currentAction || undefined,
+      stackTraceTimestamp: run.stackTraceData?.timestamp || undefined,
+      stackTraceBotName: run.stackTraceData?.botName || undefined
     };
 
-    // Clean up temporary config file
-    if (run.configFilePath) {
-      try {
-        const fs = require('fs');
-        if (fs.existsSync(run.configFilePath)) {
-          fs.unlinkSync(run.configFilePath);
-        }
-      } catch (error) {
-        console.error(`Failed to delete config file ${run.configFilePath}:`, error);
-      }
-    }
+    // Clean up temporary files
+    this.cleanupTempFiles(run);
 
     this.activeRuns.delete(runId);
 

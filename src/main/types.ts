@@ -109,6 +109,10 @@ export interface RunRecord {
   error?: string;
   screenshotPath?: string;      // Relative path to screenshot file
   screenshotError?: string;     // Error message if screenshot failed
+  // Stack trace fields for timeout debugging
+  lastStackTrace?: string;      // Last known executing action
+  stackTraceTimestamp?: string; // When stack trace was captured
+  stackTraceBotName?: string;   // Name of the bot that was running
 }
 
 export interface ActiveRun {

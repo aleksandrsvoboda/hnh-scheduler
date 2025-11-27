@@ -471,56 +471,46 @@ const RunHistory: React.FC = () => {
                   Last Known Execution
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
-                      Bot:
-                    </span>
-                    <span style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px' }}>Bot:</span>
+                    <span style={{ color: '#495057' }}>
                       {screenshotModal.runRecord.stackTraceBotName || 'Unknown'}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
-                      Method:
-                    </span>
-                    <span style={{
-                      flex: 1,
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px' }}>Method:</span>
+                    <code style={{
                       fontFamily: 'Consolas, Monaco, "Courier New", monospace',
                       background: '#e9ecef',
                       padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '14px'
+                      borderRadius: '3px',
+                      fontSize: '14px',
+                      color: '#495057'
                     }}>
                       {extractMethodName(screenshotModal.runRecord.lastStackTrace)}
+                    </code>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px' }}>Captured:</span>
+                    <span style={{ color: '#495057' }}>
+                      {formatTimestamp(screenshotModal.runRecord.stackTraceTimestamp || '')}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
-                      Full Stack:
-                    </span>
+                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px', flexShrink: 0, paddingTop: '2px' }}>Full Stack:</span>
                     <code style={{
-                      background: '#2d3748',
-                      color: '#e2e8f0',
-                      padding: '8px 12px',
-                      borderRadius: '4px',
+                      background: '#e9ecef',
+                      padding: '6px 8px',
+                      borderRadius: '3px',
                       fontFamily: 'Consolas, Monaco, "Courier New", monospace',
                       fontSize: '12px',
-                      lineHeight: 1.4,
+                      color: '#495057',
+                      lineHeight: 1.3,
                       wordBreak: 'break-all',
-                      display: 'block',
-                      marginTop: '4px',
-                      flex: 1
+                      display: 'inline-block'
                     }}>
                       {screenshotModal.runRecord.lastStackTrace}
                     </code>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <span style={{ minWidth: '80px', fontWeight: 600, color: '#6c757d', flexShrink: 0 }}>
-                      Captured:
-                    </span>
-                    <span style={{ flex: 1 }}>
-                      {formatTimestamp(screenshotModal.runRecord.stackTraceTimestamp || '')}
-                    </span>
                   </div>
                 </div>
               </div>

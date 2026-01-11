@@ -1465,12 +1465,197 @@ input:checked + .slider:before {
     padding: 1rem;
     gap: 1rem;
   }
-  
+
   .tips-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .help-card {
     padding: 1rem;
   }
+}
+
+/* Weekly Schedule Editor Styles */
+.weekly-schedule-editor {
+  margin-bottom: 16px;
+}
+
+/* Header row with day buttons */
+.weekly-header-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.weekly-time-column-header {
+  width: 54px;
+  flex-shrink: 0;
+}
+
+.weekly-day-header-cell {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding: 4px 2px;
+}
+
+.weekly-day-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.weekly-day-btn:hover {
+  border-color: #27ae60;
+  background: #f0fdf4;
+}
+
+.weekly-day-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: #27ae60;
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.weekly-day-count {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  background: #3b82f6;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Time Grid */
+.weekly-grid {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.weekly-grid-row {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 48px;
+}
+
+.weekly-grid-row:last-child {
+  border-bottom: none;
+}
+
+.weekly-time-label {
+  width: 54px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.weekly-grid-cell {
+  flex: 1;
+  border-right: 1px solid #e5e7eb;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.weekly-grid-cell:last-child {
+  border-right: none;
+}
+
+.weekly-time-block {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.weekly-time-block:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.4);
+  background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+}
+
+/* Modal styles for adding time */
+.weekly-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.weekly-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 280px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.weekly-modal h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.weekly-modal .form-input {
+  margin-bottom: 16px;
+}
+
+.weekly-modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.weekly-summary {
+  margin-top: 12px;
+  font-size: 13px;
 }

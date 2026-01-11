@@ -901,10 +901,16 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({ schedule, o
                       <div
                         key={time}
                         className="weekly-time-block"
-                        onClick={() => handleDeleteTime(dayIndex, time)}
-                        title={`${time} - Click to remove`}
                       >
-                        {time}
+                        <span className="weekly-time-text">{time}</span>
+                        <button
+                          type="button"
+                          className="weekly-time-delete"
+                          onClick={() => handleDeleteTime(dayIndex, time)}
+                          title="Remove this time"
+                        >
+                          ×
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -949,7 +955,7 @@ const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({ schedule, o
 
       {/* Summary */}
       <div className="weekly-summary">
-        <span className="text-muted">Click on a time block to remove it.</span>
+        <span className="text-muted">Hover over a time block and click × to remove it.</span>
       </div>
     </div>
   );

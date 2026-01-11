@@ -1602,18 +1602,53 @@ input:checked + .slider:before {
   color: white;
   font-size: 12px;
   font-weight: 600;
-  padding: 6px 8px;
+  padding: 4px 8px;
   border-radius: 6px;
-  text-align: center;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .weekly-time-block:hover {
-  transform: scale(1.02);
   box-shadow: 0 2px 8px rgba(39, 174, 96, 0.4);
-  background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+}
+
+.weekly-time-text {
+  flex: 1;
+  text-align: center;
+}
+
+.weekly-time-delete {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.weekly-time-block:hover .weekly-time-delete {
+  opacity: 1;
+}
+
+.weekly-time-delete:hover {
+  background: rgba(220, 53, 69, 0.9);
+  transform: scale(1.1);
 }
 
 /* Modal styles for adding time */

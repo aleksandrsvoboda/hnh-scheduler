@@ -12,6 +12,7 @@ const DEFAULT_CONFIG: Config = {
   javaPath: 'java',
   hafenPath: 'hafen.jar',
   isJava18: false,
+  headlessMode: false,              // Run with GUI by default
   // Default window management settings
   autoMinimizeWindow: false,
   minimizeToTray: false,

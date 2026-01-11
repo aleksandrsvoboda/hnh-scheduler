@@ -9,6 +9,7 @@ export interface Config {
   javaPath?: string;
   hafenPath?: string;
   isJava18?: boolean;
+  headlessMode?: boolean;               // Run scenarios without game window
   // Window management
   autoMinimizeWindow?: boolean;
   minimizeToTray?: boolean;

@@ -332,6 +332,24 @@ const Settings: React.FC = () => {
               </p>
             </div>
           </div>
+
+          <div className="form-checkbox-group">
+            <input
+              type="checkbox"
+              id="headlessMode"
+              checked={config.headlessMode || false}
+              onChange={(e) => handleConfigChange('headlessMode', e.target.checked)}
+            />
+            <div>
+              <label className="form-checkbox-label" htmlFor="headlessMode">
+                Run in headless mode
+                <InfoTooltip text="Run scenarios without the game window. Significantly reduces GPU usage, ideal for running multiple bots or server deployments. Disable for visual debugging." />
+              </label>
+              <p className="form-help">
+                No game window will be shown. Reduces resource usage but prevents visual debugging.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Window Management */}

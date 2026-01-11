@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Schedule, ScheduleEntry, Scenario, Character, Cadence, OverlapPolicy } from '../types';
+import { Schedule, ScheduleEntry, Scenario, Character, Cadence, OverlapPolicy, WeeklySchedule } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import InfoTooltip from './InfoTooltip';
 import Toggle from './Toggle';
+
+// Day names for the weekly schedule (0=Monday, 6=Sunday)
+const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_NAMES_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 // Helper functions to handle datetime-local without any timezone conversion
 const dateToLocalInput = (isoString: string): string => {
@@ -642,12 +646,15 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
                 } else if (e.target.value === 'once') {
                   const now = new Date();
                   onUpdate({ cadence: { type: 'once', atISO: now.toISOString() } });
+                } else if (e.target.value === 'weekly') {
+                  onUpdate({ cadence: { type: 'weekly', schedule: {} } });
                 }
               }}
             >
               <option value="every">Every N minutes/hours</option>
               <option value="cron">Cron expression</option>
               <option value="once">Once at specific time</option>
+              <option value="weekly">Weekly schedule</option>
             </select>
           </div>
 
@@ -700,6 +707,13 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
                 onChange={(e) => handleCadenceChange('atISO', localInputToISO(e.target.value))}
               />
             </div>
+          )}
+
+          {entry.cadence.type === 'weekly' && (
+            <WeeklyScheduleEditor
+              schedule={entry.cadence.schedule}
+              onChange={(schedule) => onUpdate({ cadence: { type: 'weekly', schedule } })}
+            />
           )}
 
           {/* Optional Start Time for recurring schedules */}
@@ -784,6 +798,169 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
   );
 };
 
+// Weekly Schedule Editor Component
+interface WeeklyScheduleEditorProps {
+  schedule: WeeklySchedule;
+  onChange: (schedule: WeeklySchedule) => void;
+}
+
+const WeeklyScheduleEditor: React.FC<WeeklyScheduleEditorProps> = ({ schedule, onChange }) => {
+  const [addingTimeForDay, setAddingTimeForDay] = useState<number | null>(null);
+  const [newTime, setNewTime] = useState('12:00');
+
+  const handleAddTime = (dayIndex: number) => {
+    setAddingTimeForDay(dayIndex);
+    setNewTime('12:00');
+  };
+
+  const handleConfirmAddTime = () => {
+    if (addingTimeForDay === null) return;
+
+    const dayTimes = schedule[addingTimeForDay] || [];
+
+    // Prevent duplicate times
+    if (dayTimes.includes(newTime)) {
+      setAddingTimeForDay(null);
+      return;
+    }
+
+    const newSchedule = {
+      ...schedule,
+      [addingTimeForDay]: [...dayTimes, newTime].sort()
+    };
+    onChange(newSchedule);
+    setAddingTimeForDay(null);
+  };
+
+  const handleDeleteTime = (dayIndex: number, time: string) => {
+    const dayTimes = schedule[dayIndex] || [];
+    const newTimes = dayTimes.filter(t => t !== time);
+
+    const newSchedule = { ...schedule };
+    if (newTimes.length === 0) {
+      delete newSchedule[dayIndex];
+    } else {
+      newSchedule[dayIndex] = newTimes;
+    }
+    onChange(newSchedule);
+  };
+
+  // Hour rows for the grid (every 4 hours)
+  const hourRows = [0, 4, 8, 12, 16, 20];
+
+  // Get time blocks for a specific day that fall within an hour range
+  const getBlocksInRange = (dayIndex: number, startHour: number, endHour: number) => {
+    const dayTimes = schedule[dayIndex] || [];
+    return dayTimes.filter(time => {
+      const hour = parseInt(time.split(':')[0]);
+      return hour >= startHour && hour < endHour;
+    });
+  };
+
+  return (
+    <div className="weekly-schedule-editor">
+      <label className="form-label">Run At</label>
+
+      {/* Day Headers Row */}
+      <div className="weekly-header-row">
+        <div className="weekly-time-column-header"></div>
+        {DAY_NAMES.map((day, index) => {
+          const dayTimes = schedule[index] || [];
+          return (
+            <div key={index} className="weekly-day-header-cell">
+              <button
+                type="button"
+                className="weekly-day-btn"
+                onClick={() => handleAddTime(index)}
+                title={`Add time to ${day}`}
+              >
+                {day} <span className="weekly-day-plus">+</span>
+              </button>
+              {dayTimes.length > 0 && (
+                <span className="weekly-day-count">{dayTimes.length}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Time Grid */}
+      <div className="weekly-grid">
+        {hourRows.map((hour, rowIndex) => {
+          const nextHour = rowIndex < hourRows.length - 1 ? hourRows[rowIndex + 1] : 24;
+          return (
+            <div key={hour} className="weekly-grid-row">
+              <div className="weekly-time-label">
+                {String(hour).padStart(2, '0')}:00
+              </div>
+              {DAY_NAMES.map((_, dayIndex) => {
+                const blocks = getBlocksInRange(dayIndex, hour, nextHour);
+                return (
+                  <div key={dayIndex} className="weekly-grid-cell">
+                    {blocks.map(time => (
+                      <div
+                        key={time}
+                        className="weekly-time-block"
+                      >
+                        <span className="weekly-time-text">{time}</span>
+                        <button
+                          type="button"
+                          className="weekly-time-delete"
+                          onClick={() => handleDeleteTime(dayIndex, time)}
+                          title="Remove this time"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add Time Modal */}
+      {addingTimeForDay !== null && (
+        <div className="weekly-modal-overlay" onClick={() => setAddingTimeForDay(null)}>
+          <div className="weekly-modal" onClick={e => e.stopPropagation()}>
+            <h4>Add time for {DAY_NAMES[addingTimeForDay]}</h4>
+            <input
+              type="time"
+              className="form-input"
+              value={newTime}
+              onChange={(e) => setNewTime(e.target.value)}
+              autoFocus
+            />
+            <div className="weekly-modal-buttons">
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={() => setAddingTimeForDay(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-small"
+                onClick={handleConfirmAddTime}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary */}
+      <div className="weekly-summary">
+        <span className="text-muted">Hover over a time block and click × to remove it.</span>
+      </div>
+    </div>
+  );
+};
+
 // Helper functions moved outside component to avoid re-creation
 function formatCadence(cadence: Cadence): string {
   switch (cadence.type) {
@@ -793,6 +970,13 @@ function formatCadence(cadence: Cadence): string {
       return `Every ${cadence.n} ${cadence.unit}`;
     case 'once':
       return `Once at ${new Date(cadence.atISO).toLocaleString()}`;
+    case 'weekly': {
+      const totalTimes = Object.values(cadence.schedule).flat().length;
+      const daysWithTimes = Object.keys(cadence.schedule).filter(
+        day => (cadence.schedule[parseInt(day)] || []).length > 0
+      ).length;
+      return `Weekly: ${totalTimes} run${totalTimes !== 1 ? 's' : ''} across ${daysWithTimes} day${daysWithTimes !== 1 ? 's' : ''}`;
+    }
     default:
       return 'Unknown';
   }

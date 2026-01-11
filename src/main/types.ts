@@ -64,10 +64,16 @@ export interface CharactersFile {
   characters: Character[];
 }
 
+// Weekly schedule: maps day index (0=Monday, 6=Sunday) to array of times ("HH:MM")
+export interface WeeklySchedule {
+  [dayIndex: number]: string[];
+}
+
 export type Cadence =
   | { type: "cron"; expression: string; startTimeISO?: string }
   | { type: "every"; unit: "minutes" | "hours"; n: number; startTimeISO?: string }
-  | { type: "once"; atISO: string };
+  | { type: "once"; atISO: string }
+  | { type: "weekly"; schedule: WeeklySchedule };
 
 export type OverlapPolicy = "skip" | "queue" | "kill-previous";
 

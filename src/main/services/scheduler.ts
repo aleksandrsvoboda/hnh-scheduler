@@ -1,6 +1,6 @@
 import * as cron from 'node-cron';
 import { EventEmitter } from 'events';
-import { Schedule, ScheduleEntry, Cadence, UpcomingRun } from '../types';
+import { Schedule, ScheduleEntry, Cadence, UpcomingRun, WeeklySchedule } from '../types';
 
 interface ScheduledJob {
   entryId: string;
@@ -78,6 +78,9 @@ export class Scheduler extends EventEmitter {
         } else if (job.type === 'timeout' && entry.cadence.type === 'once') {
           // For once jobs, use the target time
           nextRunAt = new Date((entry.cadence as any).atISO).getTime();
+        } else if (entry.cadence.type === 'weekly') {
+          // For weekly jobs, calculate next scheduled time
+          nextRunAt = this.calculateNextWeeklyRun(entry.cadence.schedule);
         }
 
         this.jobs.set(entry.id, {
@@ -163,7 +166,7 @@ export class Scheduler extends EventEmitter {
       case 'once': {
         const targetTime = new Date(cadence.atISO).getTime();
         const now = Date.now();
-        
+
         if (targetTime <= now) {
           console.warn(`Once schedule ${entry.id} is in the past, skipping`);
           return null;
@@ -172,6 +175,44 @@ export class Scheduler extends EventEmitter {
         const delay = targetTime - now;
         const timeoutId = setTimeout(triggerRun, delay);
         return { job: timeoutId, type: 'timeout' };
+      }
+
+      case 'weekly': {
+        // For weekly schedules, create cron jobs for each day/time combination
+        // We'll use a single interval that checks every minute
+        const weeklySchedule = cadence.schedule;
+
+        // Track last triggered minute to prevent double-triggers
+        let lastTriggeredMinute = -1;
+
+        const checkAndTrigger = () => {
+          const now = new Date();
+          const currentMinute = now.getHours() * 60 + now.getMinutes();
+
+          // Prevent double-trigger in the same minute
+          if (currentMinute === lastTriggeredMinute) {
+            return;
+          }
+
+          // Convert JS day (0=Sunday) to our day index (0=Monday)
+          const jsDay = now.getDay();
+          const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+
+          const times = weeklySchedule[dayIndex] || [];
+          const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+          if (times.includes(currentTime)) {
+            lastTriggeredMinute = currentMinute;
+            triggerRun();
+          }
+        };
+
+        // Check immediately in case we're at a scheduled time
+        checkAndTrigger();
+
+        // Check every minute (60000ms)
+        const intervalId = setInterval(checkAndTrigger, 60000);
+        return { job: intervalId, type: 'interval' };
       }
 
       default:
@@ -188,6 +229,71 @@ export class Scheduler extends EventEmitter {
       default:
         throw new Error(`Unknown interval unit: ${unit}`);
     }
+  }
+
+  private calculateNextWeeklyRun(schedule: WeeklySchedule): number | undefined {
+    const now = new Date();
+    const jsDay = now.getDay();
+    const todayIndex = jsDay === 0 ? 6 : jsDay - 1; // Convert to 0=Monday
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    // Check each day starting from today, going through the week
+    for (let offset = 0; offset < 7; offset++) {
+      const dayIndex = (todayIndex + offset) % 7;
+      const times = schedule[dayIndex] || [];
+
+      // Sort times chronologically
+      const sortedTimes = [...times].sort();
+
+      for (const time of sortedTimes) {
+        // If it's today, only consider times after current time
+        if (offset === 0 && time <= currentTime) {
+          continue;
+        }
+
+        // Found next run time
+        const [hours, minutes] = time.split(':').map(Number);
+        const nextRun = new Date(now);
+        nextRun.setDate(nextRun.getDate() + offset);
+        nextRun.setHours(hours, minutes, 0, 0);
+        return nextRun.getTime();
+      }
+    }
+
+    return undefined;
+  }
+
+  private getWeeklyUpcomingRuns(schedule: WeeklySchedule, maxLookAhead: number): Date[] {
+    const runs: Date[] = [];
+    const now = new Date();
+    const endTime = new Date(now.getTime() + maxLookAhead);
+    const jsDay = now.getDay();
+    const todayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    // Check each day in the look-ahead window
+    for (let offset = 0; offset < 8; offset++) { // 8 to cover a full week + today
+      const dayIndex = (todayIndex + offset) % 7;
+      const times = schedule[dayIndex] || [];
+
+      for (const time of times) {
+        // If it's today, only consider times after current time
+        if (offset === 0 && time <= currentTime) {
+          continue;
+        }
+
+        const [hours, minutes] = time.split(':').map(Number);
+        const runDate = new Date(now);
+        runDate.setDate(runDate.getDate() + offset);
+        runDate.setHours(hours, minutes, 0, 0);
+
+        if (runDate <= endTime) {
+          runs.push(runDate);
+        }
+      }
+    }
+
+    return runs.sort((a, b) => a.getTime() - b.getTime());
   }
 
   private handleTrigger(schedule: Schedule, entry: ScheduleEntry): void {
@@ -460,6 +566,11 @@ export class Scheduler extends EventEmitter {
               nextTime = new Date(nextTime.getTime() + intervalMs);
             }
             cadenceType = `every ${entry.cadence.n} ${entry.cadence.unit}`;
+          } else if (entry.cadence.type === 'weekly') {
+            // For weekly schedules, get all upcoming runs within the look-ahead window
+            const weeklyRuns = this.getWeeklyUpcomingRuns(entry.cadence.schedule, maxLookAhead);
+            runs.push(...weeklyRuns);
+            cadenceType = 'weekly';
           }
         }
 

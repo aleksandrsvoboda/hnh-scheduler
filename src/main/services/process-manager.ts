@@ -2,6 +2,7 @@ import { spawn, ChildProcess, exec } from 'child_process';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import * as os from 'os';
+import * as path from 'path';
 import { ActiveRun, RunRecord, Scenario, Character } from '../types';
 import { CredentialVault, CredentialSecret } from './credential-vault';
 import { ScreenshotService, ScreenshotResult } from './screenshot-service';
@@ -82,31 +83,43 @@ export class ProcessManager extends EventEmitter {
     const hafenJarPath = config.hafenPath || 'hafen.jar';
     const isJava18 = config.isJava18 || false;
     
+    const headlessMode = config.headlessMode || false;
+
     let javaArgs;
     if (isJava18) {
       javaArgs = [
         '-jar', '-Xms4g', '-Xmx4g',
         '--add-exports', 'java.base/java.lang=ALL-UNNAMED',
-        '--add-exports', 'java.desktop/sun.awt=ALL-UNNAMED', 
+        '--add-exports', 'java.desktop/sun.awt=ALL-UNNAMED',
         '--add-exports', 'java.desktop/sun.java2d=ALL-UNNAMED',
-        hafenJarPath,
-        '-bots', configFilePath
+        hafenJarPath
       ];
     } else {
       javaArgs = [
-        '-jar', hafenJarPath,
-        '-bots', configFilePath
+        '-jar', hafenJarPath
       ];
     }
 
+    // Add headless flag if enabled
+    if (headlessMode) {
+      javaArgs.push('-h');
+    }
+
+    // Add bot config file path
+    javaArgs.push('-bots', configFilePath);
+
     // Spawn process with optional minimized launch
+    // Use the hafen.jar's directory as the working directory
+    // This ensures resources are loaded relative to the jar file
+    const hafenDir = path.dirname(path.resolve(hafenJarPath));
+
     let childProcess: ChildProcess;
-    
+
     if (config.autoMinimizeWindow) {
-      childProcess = this.spawnMinimized(javaCommand, javaArgs);
+      childProcess = this.spawnMinimized(javaCommand, javaArgs, hafenDir);
     } else {
       childProcess = spawn(javaCommand, javaArgs, {
-        cwd: process.cwd(),
+        cwd: hafenDir,
         stdio: ['ignore', 'pipe', 'pipe']
       });
     }
@@ -543,7 +556,7 @@ export class ProcessManager extends EventEmitter {
   /**
    * Spawn process with platform-specific minimized launch
    */
-  private spawnMinimized(javaCommand: string, javaArgs: string[]): ChildProcess {
+  private spawnMinimized(javaCommand: string, javaArgs: string[], cwd: string): ChildProcess {
     const platform = os.platform();
     
     console.log(`[ProcessManager] Launching minimized on platform: ${platform}`);
@@ -552,7 +565,7 @@ export class ProcessManager extends EventEmitter {
       case 'win32':
         // Windows: Launch normally but with windowsHide, then minimize via PowerShell
         const winProcess = spawn(javaCommand, javaArgs, {
-          cwd: process.cwd(),
+          cwd,
           stdio: ['ignore', 'pipe', 'pipe'],
           windowsHide: true
         });
@@ -577,7 +590,7 @@ export class ProcessManager extends EventEmitter {
       case 'darwin':
         // macOS: Launch with nohup and minimize via AppleScript shortly after
         const macProcess = spawn(javaCommand, javaArgs, {
-          cwd: process.cwd(),
+          cwd,
           stdio: ['ignore', 'pipe', 'pipe'],
           detached: false
         });
@@ -606,7 +619,7 @@ export class ProcessManager extends EventEmitter {
       case 'linux':
         // Linux: Regular spawn, then minimize with xdotool
         const linuxProcess = spawn(javaCommand, javaArgs, {
-          cwd: process.cwd(),
+          cwd,
           stdio: ['ignore', 'pipe', 'pipe'],
           env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }
         });
@@ -633,7 +646,7 @@ export class ProcessManager extends EventEmitter {
         console.warn(`[ProcessManager] Minimized launch not supported on platform: ${platform}`);
         // Fallback to regular spawn
         return spawn(javaCommand, javaArgs, {
-          cwd: process.cwd(),
+          cwd,
           stdio: ['ignore', 'pipe', 'pipe']
         });
     }

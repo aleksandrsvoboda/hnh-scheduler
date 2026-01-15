@@ -292,9 +292,10 @@ export class IPCManager {
         entryId,
         scenario,
         character,
-        entry.maxDurationMs
+        entry.maxDurationMs,
+        entry.headlessMode
       );
-      
+
       return { runId };
     });
 
@@ -410,13 +411,14 @@ export class IPCManager {
       try {
         const scenario = this.scenarioCatalog.findById(data.scenarioId);
         const character = this.charactersStore.findById(data.characterId);
-        
+
         if (scenario && character) {
           await this.processManager.startRun(
             data.entryId,
             scenario,
             character,
-            data.maxDurationMs
+            data.maxDurationMs,
+            data.headlessMode
           );
         }
       } catch (error) {

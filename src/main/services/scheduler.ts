@@ -414,7 +414,8 @@ export class Scheduler extends EventEmitter {
       scenarioId: entry.scenarioId,
       characterId: entry.characterId,
       maxDurationMs: entry.maxDurationMs,
-      retries: entry.retries
+      retries: entry.retries,
+      headlessMode: entry.headlessMode
     });
   }
 

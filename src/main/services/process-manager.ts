@@ -42,7 +42,8 @@ export class ProcessManager extends EventEmitter {
     entryId: string,
     scenario: Scenario,
     character: Character,
-    maxDurationMs: number
+    maxDurationMs: number,
+    entryHeadlessMode?: boolean
   ): Promise<string> {
     const runId = uuidv4();
     
@@ -83,7 +84,8 @@ export class ProcessManager extends EventEmitter {
     const hafenJarPath = config.hafenPath || 'hafen.jar';
     const isJava18 = config.isJava18 || false;
     
-    const headlessMode = config.headlessMode || false;
+    // Headless mode: global setting overrides all, otherwise use entry-specific setting
+    const headlessMode = config.headlessMode || entryHeadlessMode || false;
 
     let javaArgs;
     if (isJava18) {

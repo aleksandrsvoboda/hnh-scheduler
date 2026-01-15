@@ -27,6 +27,7 @@ const Schedules: React.FC = () => {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [advancedMode, setAdvancedMode] = useState(false);
   
   // Custom confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -50,16 +51,18 @@ const Schedules: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [schedulesList, scenariosList, charactersList] = await Promise.all([
+      const [schedulesList, scenariosList, charactersList, config] = await Promise.all([
         window.api.schedules.list(),
         window.api.scenarios.get(),
-        window.api.characters.list()
+        window.api.characters.list(),
+        window.api.settings.get()
       ]);
-      
+
       setSchedules(schedulesList);
       setScenarios(scenariosList);
       setCharacters(charactersList);
-      
+      setAdvancedMode(config.advancedMode || false);
+
       if (schedulesList.length > 0 && !selectedScheduleId) {
         setSelectedScheduleId(schedulesList[0].id);
       }
@@ -435,6 +438,7 @@ const Schedules: React.FC = () => {
                           onUpdate={(updates) => handleUpdateEntry(entry.id, updates)}
                           onDelete={() => handleDeleteEntry(entry.id)}
                           onTest={() => handleTestEntry(entry.id)}
+                          advancedMode={advancedMode}
                         />
                       ))}
                     </div>
@@ -516,6 +520,7 @@ interface ScheduleEntryEditorProps {
   onUpdate: (updates: Partial<ScheduleEntry>) => void;
   onDelete: () => void;
   onTest: () => void;
+  advancedMode: boolean;
 }
 
 const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
@@ -524,7 +529,8 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
   characters,
   onUpdate,
   onDelete,
-  onTest
+  onTest,
+  advancedMode
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -792,6 +798,21 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
               When disabled, this scenario will not execute but remains saved in the schedule
             </div>
           </div>
+
+          {advancedMode && (
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                <Toggle
+                  checked={entry.headlessMode || false}
+                  onChange={(checked) => onUpdate({ headlessMode: checked })}
+                />
+                <span className="form-label" style={{ margin: 0 }}>Run in headless mode</span>
+              </label>
+              <div className="info-text">
+                Run this scenario without the game window. Reduces resource usage but prevents visual debugging.
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

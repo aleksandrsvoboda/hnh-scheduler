@@ -89,6 +89,7 @@ export interface ScheduleEntry {
   overlapPolicy: OverlapPolicy;
   retries?: { max: number; backoffMs: number };
   enabled: boolean;
+  headlessMode?: boolean;           // Override global headless setting for this entry
 }
 
 export interface Schedule {

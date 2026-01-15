@@ -115,6 +115,10 @@ export class IPCManager {
       }
     });
 
+    ipcMain.handle('app:getVersion', () => {
+      return require('electron').app.getVersion();
+    });
+
     // Scenarios
     ipcMain.handle('scenarios:get', () => {
       return this.scenarioCatalog.getScenarios();

@@ -21,6 +21,7 @@ const api = {
     minimizeWindow: (): Promise<void> => ipcRenderer.invoke('app:minimizeWindow'),
     toggleMaximizeWindow: (): Promise<void> => ipcRenderer.invoke('app:toggleMaximizeWindow'),
     closeWindow: (): Promise<void> => ipcRenderer.invoke('app:closeWindow'),
+    getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
   },
 
   // Scenarios

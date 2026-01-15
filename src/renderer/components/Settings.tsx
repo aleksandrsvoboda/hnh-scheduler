@@ -7,6 +7,11 @@ const Settings: React.FC = () => {
   const [originalConfig, setOriginalConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>('');
+  const [unlockStep, setUnlockStep] = useState(0); // 0 = not started, 1 = version clicks, 2 = schema clicks
+  const [unlockClicks, setUnlockClicks] = useState(0);
+  const [showAdvancedToast, setShowAdvancedToast] = useState(false);
+  const [unlockTimeout, setUnlockTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Custom confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -30,9 +35,13 @@ const Settings: React.FC = () => {
   const loadConfig = async () => {
     try {
       setLoading(true);
-      const currentConfig = await window.api.settings.get();
+      const [currentConfig, version] = await Promise.all([
+        window.api.settings.get(),
+        window.api.app.getVersion()
+      ]);
       setConfig(currentConfig);
       setOriginalConfig(currentConfig); // Store original values for comparison
+      setAppVersion(version);
     } catch (error) {
       console.error('Failed to load config:', error);
     } finally {
@@ -194,7 +203,7 @@ const Settings: React.FC = () => {
           { name: 'All Files', extensions: ['*'] }
         ]
       });
-      
+
       if (filePath) {
         await handleHafenPathChange(filePath);
       }
@@ -208,6 +217,73 @@ const Settings: React.FC = () => {
     }
   };
 
+  const resetUnlockSequence = () => {
+    setUnlockStep(0);
+    setUnlockClicks(0);
+    if (unlockTimeout) {
+      clearTimeout(unlockTimeout);
+      setUnlockTimeout(null);
+    }
+  };
+
+  const startUnlockTimeout = () => {
+    if (unlockTimeout) clearTimeout(unlockTimeout);
+    const timeout = setTimeout(() => {
+      resetUnlockSequence();
+    }, 5000); // Reset if no clicks within 5 seconds
+    setUnlockTimeout(timeout);
+  };
+
+  const handleVersionClick = () => {
+    if (config?.advancedMode) return; // Already unlocked
+
+    // Must be step 0 or 1 to click version
+    if (unlockStep === 0 || unlockStep === 1) {
+      const newStep = 1;
+      const newClicks = unlockStep === 1 ? unlockClicks + 1 : 1;
+
+      setUnlockStep(newStep);
+      setUnlockClicks(newClicks);
+      startUnlockTimeout();
+
+      // After 5 version clicks, move to step 2
+      if (newClicks >= 5) {
+        setUnlockStep(2);
+        setUnlockClicks(0);
+      }
+    } else {
+      // Clicked version when should click schema - reset
+      resetUnlockSequence();
+    }
+  };
+
+  const handleSchemaClick = async () => {
+    if (config?.advancedMode) return; // Already unlocked
+
+    // Must be on step 2 to click schema
+    if (unlockStep === 2) {
+      const newClicks = unlockClicks + 1;
+      setUnlockClicks(newClicks);
+      startUnlockTimeout();
+
+      // After 3 schema clicks, unlock!
+      if (newClicks >= 3) {
+        resetUnlockSequence();
+        try {
+          const updatedConfig = { ...config!, advancedMode: true };
+          await window.api.settings.set({ advancedMode: true });
+          setConfig(updatedConfig);
+          setShowAdvancedToast(true);
+          setTimeout(() => setShowAdvancedToast(false), 3000);
+        } catch (error) {
+          console.error('Failed to enable advanced mode:', error);
+        }
+      }
+    } else {
+      // Clicked schema at wrong time - reset
+      resetUnlockSequence();
+    }
+  };
 
   if (loading) {
     return (
@@ -333,23 +409,25 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-checkbox-group">
-            <input
-              type="checkbox"
-              id="headlessMode"
-              checked={config.headlessMode || false}
-              onChange={(e) => handleConfigChange('headlessMode', e.target.checked)}
-            />
-            <div>
-              <label className="form-checkbox-label" htmlFor="headlessMode">
-                Run in headless mode
-                <InfoTooltip text="Run scenarios without the game window. Significantly reduces GPU usage, ideal for running multiple bots or server deployments. Disable for visual debugging." />
-              </label>
-              <p className="form-help">
-                No game window will be shown. Reduces resource usage but prevents visual debugging.
-              </p>
+          {config.advancedMode && (
+            <div className="form-checkbox-group">
+              <input
+                type="checkbox"
+                id="headlessMode"
+                checked={config.headlessMode || false}
+                onChange={(e) => handleConfigChange('headlessMode', e.target.checked)}
+              />
+              <div>
+                <label className="form-checkbox-label" htmlFor="headlessMode">
+                  Run in headless mode
+                  <InfoTooltip text="Run scenarios without the game window. Significantly reduces GPU usage, ideal for running multiple bots or server deployments. Disable for visual debugging." />
+                </label>
+                <p className="form-help">
+                  No game window will be shown. Reduces resource usage but prevents visual debugging.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Window Management */}
@@ -524,10 +602,30 @@ const Settings: React.FC = () => {
         {/* Status Information */}
         <div className="settings-section settings-info-section">
           <h3>System Information</h3>
-          
+
           <div className="text-small">
             <div className="mb-1">
-              <strong>Schema Version:</strong> {config.schemaVersion}
+              <strong>App Version:</strong>{' '}
+              <span
+                onClick={handleVersionClick}
+                style={{ userSelect: 'none' }}
+              >
+                {appVersion || 'Loading...'}
+              </span>
+              {config.advancedMode && (
+                <span style={{ marginLeft: '8px', color: '#27ae60', fontSize: '11px' }}>
+                  (Advanced)
+                </span>
+              )}
+            </div>
+            <div className="mb-1">
+              <strong>Schema Version:</strong>{' '}
+              <span
+                onClick={handleSchemaClick}
+                style={{ userSelect: 'none' }}
+              >
+                {config.schemaVersion}
+              </span>
             </div>
             <div className="mb-1">
               <strong>Data Directory:</strong> {config.dataDir || 'Default (AppData)'}
@@ -538,6 +636,25 @@ const Settings: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Advanced Mode Toast */}
+      {showAdvancedToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#27ae60',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1001,
+          fontWeight: 500
+        }}>
+          Advanced mode enabled
+        </div>
+      )}
 
       {/* Custom Confirmation Dialog */}
       {confirmDialog.isOpen && (

@@ -17,6 +17,8 @@ export interface Config {
   timeoutScreenshots?: boolean;         // Enable/disable timeout screenshots
   screenshotRetentionDays?: number;     // Cleanup policy for screenshots
   screenshotTimeout?: number;           // Timeout for screenshot capture (ms)
+  // Hidden features
+  advancedMode?: boolean;               // Unlocks advanced/hidden features
 }
 
 export interface ScenarioStep {

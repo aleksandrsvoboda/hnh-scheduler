@@ -132,10 +132,10 @@ const ScenarioLibrary: React.FC = () => {
 
       {error && (
         <div className="mb-4 p-3" style={{ 
-          backgroundColor: '#f8d7da', 
-          border: '1px solid #f5c6cb', 
-          borderRadius: '4px',
-          color: '#721c24' 
+          backgroundColor: 'var(--err-bg)', 
+          border: '1px solid var(--err-line)', 
+          borderRadius: '0',
+          color: 'var(--err)' 
         }}>
           <strong>Validation Error:</strong> {error}
         </div>
@@ -194,9 +194,9 @@ const ScenarioLibrary: React.FC = () => {
                             </button>
                             <div>
                               {scenario.steps.map((step, index) => (
-                                <div key={index} className="mb-2" style={{ paddingLeft: '8px', borderLeft: '2px solid #e5e7eb' }}>
+                                <div key={index} className="mb-2" style={{ paddingLeft: '8px', borderLeft: '2px solid var(--line-strong)' }}>
                                   <div>
-                                    <strong>{index + 1}.</strong> <code style={{ color: '#059669', fontWeight: '500' }}>{step.id}</code>
+                                    <strong>{index + 1}.</strong> <code style={{ color: 'var(--teal)', fontWeight: '500' }}>{step.id}</code>
                                   </div>
                                   {Object.keys(step.params).length > 0 && (
                                     <div className="text-small text-muted" style={{ marginTop: '4px', paddingLeft: '16px' }}>

@@ -286,14 +286,14 @@ const CharactersCredentials: React.FC = () => {
   // Generate consistent colors for credential badges
   const getCredentialBadgeStyle = (label: string) => {
     const colors = [
-      { bg: '#d4edda', color: '#155724', border: '#c3e6cb' }, // green
-      { bg: '#fff3cd', color: '#856404', border: '#ffeaa7' }, // yellow  
-      { bg: '#d1ecf1', color: '#0c5460', border: '#bee5eb' }, // blue
-      { bg: '#f8d7da', color: '#721c24', border: '#f5c6cb' }, // red
-      { bg: '#e2e3e5', color: '#383d41', border: '#d6d8db' }, // gray
-      { bg: '#d1f2eb', color: '#0c5460', border: '#bce2d6' }, // teal
-      { bg: '#fce4ec', color: '#880e4f', border: '#f8bbd9' }, // pink
-      { bg: '#e8f5e8', color: '#2e7d32', border: '#c8e6c9' }, // light green
+      { bg: 'rgba(122, 209, 122, 0.12)', color: '#7AD17A', border: 'rgba(122, 209, 122, 0.35)' }, // green
+      { bg: 'rgba(232, 195, 106, 0.12)', color: '#E8C36A', border: 'rgba(232, 195, 106, 0.35)' }, // yellow  
+      { bg: 'rgba(134, 184, 255, 0.12)', color: '#86b8ff', border: 'rgba(134, 184, 255, 0.35)' }, // blue
+      { bg: 'rgba(227, 154, 154, 0.12)', color: '#E39A9A', border: 'rgba(227, 154, 154, 0.35)' }, // red
+      { bg: 'rgba(143, 163, 164, 0.12)', color: '#8FA3A4', border: 'rgba(143, 163, 164, 0.35)' }, // gray
+      { bg: 'rgba(126, 198, 194, 0.12)', color: '#7EC6C2', border: 'rgba(126, 198, 194, 0.35)' }, // teal
+      { bg: 'rgba(230, 163, 200, 0.12)', color: '#E6A3C8', border: 'rgba(230, 163, 200, 0.35)' }, // pink
+      { bg: 'rgba(168, 224, 160, 0.12)', color: '#A8E0A0', border: 'rgba(168, 224, 160, 0.35)' }, // light green
     ];
     
     // Generate consistent index based on label
@@ -479,7 +479,7 @@ const CharactersCredentials: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -493,9 +493,10 @@ const CharactersCredentials: React.FC = () => {
         >
           <div 
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--accent)',
               padding: '24px',
-              borderRadius: '8px',
+              borderRadius: '0',
               width: '400px',
               maxWidth: '90vw',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
@@ -581,7 +582,7 @@ const CharactersCredentials: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -595,9 +596,10 @@ const CharactersCredentials: React.FC = () => {
         >
           <div 
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--accent)',
               padding: '24px',
-              borderRadius: '8px',
+              borderRadius: '0',
               width: '400px',
               maxWidth: '90vw',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
@@ -666,7 +668,7 @@ const CharactersCredentials: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -676,20 +678,21 @@ const CharactersCredentials: React.FC = () => {
         >
           <div
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--accent)',
               padding: '24px',
-              borderRadius: '8px',
+              borderRadius: '0',
               width: '450px',
               maxWidth: '90vw',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ marginBottom: '16px', color: '#374151' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--text)' }}>
               {confirmDialog.title}
             </h3>
             
-            <p style={{ marginBottom: '24px', color: '#6b7280', lineHeight: '1.5' }}>
+            <p style={{ marginBottom: '24px', color: 'var(--dim)', lineHeight: '1.5' }}>
               {confirmDialog.message}
             </p>
             

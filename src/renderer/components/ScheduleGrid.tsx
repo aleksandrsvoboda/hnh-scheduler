@@ -46,16 +46,16 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ upcomingRuns, characters, s
   const getScenarioColor = (scenarioId: number): { background: string; text: string } => {
     // Generate consistent colors based on scenario ID
     const colors = [
-      { background: 'linear-gradient(135deg, #3498db, #2980b9)', text: '#ffffff' }, // Blue
-      { background: 'linear-gradient(135deg, #e74c3c, #c0392b)', text: '#ffffff' }, // Red
-      { background: 'linear-gradient(135deg, #27ae60, #229954)', text: '#ffffff' }, // Green
-      { background: 'linear-gradient(135deg, #f39c12, #e67e22)', text: '#ffffff' }, // Orange
-      { background: 'linear-gradient(135deg, #9b59b6, #8e44ad)', text: '#ffffff' }, // Purple
-      { background: 'linear-gradient(135deg, #1abc9c, #16a085)', text: '#ffffff' }, // Teal
-      { background: 'linear-gradient(135deg, #34495e, #2c3e50)', text: '#ffffff' }, // Dark
-      { background: 'linear-gradient(135deg, #e91e63, #ad1457)', text: '#ffffff' }, // Pink
-      { background: 'linear-gradient(135deg, #ff9800, #f57c00)', text: '#ffffff' }, // Amber
-      { background: 'linear-gradient(135deg, #607d8b, #455a64)', text: '#ffffff' }, // Blue Grey
+      { background: 'linear-gradient(#F2B477, #C97F3C)', text: '#1a1208' }, // Orange (Nurgling accent)
+      { background: 'linear-gradient(#9fd8d4, #5fa9a5)', text: '#0d1a19' }, // Teal
+      { background: 'linear-gradient(#a8e0a8, #6fb86f)', text: '#0f1a0f' }, // Green
+      { background: 'linear-gradient(#b6d1f7, #6f98cc)', text: '#0c1522' }, // Blue
+      { background: 'linear-gradient(#d2bdea, #957bb8)', text: '#160f22' }, // Lilac
+      { background: 'linear-gradient(#ebb2b2, #bf7777)', text: '#1f0d0d' }, // Rose
+      { background: 'linear-gradient(#ecd48c, #bb9d4b)', text: '#1c1606' }, // Gold
+      { background: 'linear-gradient(#b8c7c8, #7b8e8f)', text: '#101617' }, // Slate
+      { background: 'linear-gradient(#b5e8da, #6db8a4)', text: '#0d1a16' }, // Mint
+      { background: 'linear-gradient(#f3c2a0, #c98a5c)', text: '#1f1006' }, // Coral
     ];
     
     return colors[scenarioId % colors.length];
@@ -131,7 +131,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ upcomingRuns, characters, s
       >
         <span style={{ 
           fontSize: '12px', 
-          color: '#6b7280', 
+          color: 'var(--dim)', 
           marginRight: '8px',
           transition: 'transform 0.2s ease'
         }}>
@@ -140,7 +140,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ upcomingRuns, characters, s
         <h3 style={{ margin: 0 }}>Next 24 Hours Schedule</h3>
         <span style={{ 
           fontSize: '12px', 
-          color: '#9ca3af', 
+          color: 'var(--dim-2)', 
           marginLeft: '12px' 
         }}>
           ({uniqueScenarios.length} scenarios, {next24HourRuns.length} runs)
@@ -270,7 +270,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ upcomingRuns, characters, s
                       left: '0',
                       right: '0',
                       height: '1px',
-                      backgroundColor: isHourMark ? '#d1d5db' : '#e5e7eb',
+                      backgroundColor: isHourMark ? 'var(--line-strong)' : 'var(--line)',
                       opacity: isHourMark ? 0.9 : 0.6,
                       zIndex: 0
                     }}

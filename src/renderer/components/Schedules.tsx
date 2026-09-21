@@ -274,8 +274,8 @@ const Schedules: React.FC = () => {
               className="schedule-item"
               onClick={handleCreateSchedule}
               style={{
-                border: '2px dashed #d1d5db',
-                backgroundColor: '#f9fafb',
+                border: '2px dashed var(--line-strong)',
+                backgroundColor: 'var(--surface-2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -284,17 +284,17 @@ const Schedules: React.FC = () => {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#3498db';
-                e.currentTarget.style.backgroundColor = '#eff6ff';
+                e.currentTarget.style.borderColor = 'var(--accent)';
+                e.currentTarget.style.backgroundColor = 'var(--accent-soft)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#d1d5db';
-                e.currentTarget.style.backgroundColor = '#f9fafb';
+                e.currentTarget.style.borderColor = 'var(--line-strong)';
+                e.currentTarget.style.backgroundColor = 'var(--surface-2)';
               }}
             >
               <div style={{ 
                 fontSize: '24px', 
-                color: '#6b7280',
+                color: 'var(--dim)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -411,13 +411,13 @@ const Schedules: React.FC = () => {
                 </div>
                 <div className="section-content">
                   {scenarios.length === 0 && (
-                    <div className="text-error mb-4 p-3 rounded" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}>
+                    <div className="text-error mb-4 p-3 rounded" style={{ backgroundColor: 'var(--err-bg)', border: '1px solid var(--err-line)' }}>
                       No scenarios available. Configure scenarios first.
                     </div>
                   )}
 
                   {characters.length === 0 && (
-                    <div className="text-error mb-4 p-3 rounded" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca' }}>
+                    <div className="text-error mb-4 p-3 rounded" style={{ backgroundColor: 'var(--err-bg)', border: '1px solid var(--err-line)' }}>
                       No characters available. Configure characters first.
                     </div>
                   )}
@@ -463,7 +463,7 @@ const Schedules: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -473,20 +473,21 @@ const Schedules: React.FC = () => {
         >
           <div
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--accent)',
               padding: '24px',
-              borderRadius: '8px',
+              borderRadius: '0',
               width: '400px',
               maxWidth: '90vw',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ marginBottom: '16px', color: '#374151' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--text)' }}>
               {confirmDialog.title}
             </h3>
             
-            <p style={{ marginBottom: '24px', color: '#6b7280', lineHeight: '1.5' }}>
+            <p style={{ marginBottom: '24px', color: 'var(--dim)', lineHeight: '1.5' }}>
               {confirmDialog.message}
             </p>
             
@@ -560,15 +561,15 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
         >
           <div className="flex gap-3 items-center">
-            <span style={{ fontSize: '12px', color: '#6b7280' }}>{isExpanded ? '▼' : '▶'}</span>
+            <span style={{ fontSize: '12px', color: 'var(--dim)' }}>{isExpanded ? '▼' : '▶'}</span>
             <div className="flex-1">
               <div className="flex gap-2 items-center mb-1">
                 <span className="schedule-badge scenario">Scenario</span>
-                <div style={{ fontWeight: 600, color: '#374151' }}>{scenario?.name || 'Unknown Scenario'}</div>
+                <div style={{ fontWeight: 600, color: 'var(--text)' }}>{scenario?.name || 'Unknown Scenario'}</div>
               </div>
               <div className="flex gap-2 items-center">
                 <span className="schedule-badge character">Character</span>
-                <div style={{ fontWeight: 500, color: '#6b7280' }}>{character?.name || 'Unknown Character'}</div>
+                <div style={{ fontWeight: 500, color: 'var(--dim)' }}>{character?.name || 'Unknown Character'}</div>
               </div>
             </div>
           </div>
@@ -596,7 +597,7 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
       </div>
 
       {isExpanded && (
-        <div className="mt-4 pt-4" style={{ borderTop: '1px solid #e5e7eb' }}>
+        <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--line)' }}>
           <div className="form-row mb-4">
             <div className="form-group flex-1">
               <label className="form-label">Scenario</label>
@@ -620,8 +621,8 @@ const ScheduleEntryEditor: React.FC<ScheduleEntryEditorProps> = ({
                 value={character ? entry.characterId : ''}
                 onChange={(e) => onUpdate({ characterId: e.target.value })}
                 style={{ 
-                  borderColor: !character && entry.characterId ? '#e74c3c' : undefined,
-                  backgroundColor: !character && entry.characterId ? '#fdf2f2' : undefined
+                  borderColor: !character && entry.characterId ? 'var(--err)' : undefined,
+                  backgroundColor: !character && entry.characterId ? 'var(--err-bg)' : undefined
                 }}
               >
                 {!character && entry.characterId && (

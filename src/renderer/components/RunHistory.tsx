@@ -317,14 +317,14 @@ const RunHistory: React.FC = () => {
             <div style={{ 
               maxHeight: 'calc(100vh - 400px)', 
               overflowY: 'auto',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px'
+              border: '1px solid var(--line)',
+              borderRadius: '0'
             }}>
               <table className="table" style={{ marginBottom: 0 }}>
                 <thead style={{ 
                   position: 'sticky', 
                   top: 0, 
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: 'var(--surface-2)',
                   zIndex: 1
                 }}>
                   <tr>
@@ -389,8 +389,9 @@ const RunHistory: React.FC = () => {
         >
           <div
             style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--accent)',
+              borderRadius: '0',
               padding: '20px',
               maxWidth: '90vw',
               maxHeight: '90vh',
@@ -422,7 +423,7 @@ const RunHistory: React.FC = () => {
             </div>
 
             {screenshotModal.recordInfo && (
-              <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
+              <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--dim)' }}>
                 <div><strong>Time:</strong> {formatDateTime(screenshotModal.recordInfo.ts)}</div>
                 <div><strong>Scenario:</strong> {screenshotModal.recordInfo.scenario}</div>
                 <div><strong>Character:</strong> {screenshotModal.recordInfo.character}</div>
@@ -437,7 +438,7 @@ const RunHistory: React.FC = () => {
             )}
 
             {screenshotModal.error && (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#dc3545' }}>
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--err)' }}>
                 <p><strong>Error loading screenshot:</strong></p>
                 <p>{screenshotModal.error}</p>
               </div>
@@ -451,8 +452,8 @@ const RunHistory: React.FC = () => {
                   style={{
                     maxWidth: '100%',
                     maxHeight: '70vh',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px'
+                    border: '1px solid var(--line)',
+                    borderRadius: '0'
                   }}
                 />
               </div>
@@ -462,49 +463,49 @@ const RunHistory: React.FC = () => {
             {screenshotModal.runRecord && screenshotModal.runRecord.lastStackTrace && (
               <div style={{
                 marginTop: '24px',
-                background: '#f8f9fa',
+                background: 'var(--surface-2)',
                 padding: '16px',
-                borderRadius: '8px',
-                borderLeft: '4px solid #dc3545'
+                borderRadius: '0',
+                borderLeft: '4px solid var(--err)'
               }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#dc3545', fontWeight: 600 }}>
+                <h4 style={{ margin: '0 0 12px 0', color: 'var(--err)', fontWeight: 600 }}>
                   Last Known Execution
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px' }}>Bot:</span>
-                    <span style={{ color: '#495057' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--dim)', minWidth: '85px' }}>Bot:</span>
+                    <span style={{ color: 'var(--text)' }}>
                       {screenshotModal.runRecord.stackTraceBotName || 'Unknown'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px' }}>Method:</span>
+                    <span style={{ fontWeight: 600, color: 'var(--dim)', minWidth: '85px' }}>Method:</span>
                     <code style={{
                       fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-                      background: '#e9ecef',
+                      background: 'var(--input)',
                       padding: '2px 6px',
-                      borderRadius: '3px',
+                      borderRadius: '0',
                       fontSize: '14px',
-                      color: '#495057'
+                      color: 'var(--text)'
                     }}>
                       {extractMethodName(screenshotModal.runRecord.lastStackTrace)}
                     </code>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px' }}>Captured:</span>
-                    <span style={{ color: '#495057' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--dim)', minWidth: '85px' }}>Captured:</span>
+                    <span style={{ color: 'var(--text)' }}>
                       {formatTimestamp(screenshotModal.runRecord.stackTraceTimestamp || '')}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <span style={{ fontWeight: 600, color: '#6c757d', minWidth: '85px', flexShrink: 0, paddingTop: '2px' }}>Full Stack:</span>
+                    <span style={{ fontWeight: 600, color: 'var(--dim)', minWidth: '85px', flexShrink: 0, paddingTop: '2px' }}>Full Stack:</span>
                     <code style={{
-                      background: '#e9ecef',
+                      background: 'var(--input)',
                       padding: '6px 8px',
-                      borderRadius: '3px',
+                      borderRadius: '0',
                       fontFamily: 'Consolas, Monaco, "Courier New", monospace',
                       fontSize: '12px',
-                      color: '#495057',
+                      color: 'var(--text)',
                       lineHeight: 1.3,
                       wordBreak: 'break-all',
                       display: 'inline-block'
@@ -520,19 +521,19 @@ const RunHistory: React.FC = () => {
             {screenshotModal.runRecord && !screenshotModal.runRecord.lastStackTrace && (
               <div style={{
                 marginTop: '24px',
-                background: '#f8f9fa',
+                background: 'var(--surface-2)',
                 padding: '16px',
-                borderRadius: '8px',
-                borderLeft: '4px solid #6c757d',
+                borderRadius: '0',
+                borderLeft: '4px solid var(--dim)',
                 textAlign: 'center'
               }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#6c757d' }}>
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--dim)' }}>
                   Execution Context
                 </h4>
                 <p style={{ margin: '0', fontStyle: 'italic' }}>
                   Stack trace not available for this run
                 </p>
-                <small style={{ color: '#6c757d' }}>
+                <small style={{ color: 'var(--dim)' }}>
                   This feature was added after this run occurred, or stack trace capture failed.
                 </small>
               </div>

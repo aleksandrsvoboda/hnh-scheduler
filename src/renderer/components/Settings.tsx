@@ -613,7 +613,7 @@ const Settings: React.FC = () => {
                 {appVersion || 'Loading...'}
               </span>
               {config.advancedMode && (
-                <span style={{ marginLeft: '8px', color: '#27ae60', fontSize: '11px' }}>
+                <span style={{ marginLeft: '8px', color: 'var(--ok)', fontSize: '11px' }}>
                   (Advanced)
                 </span>
               )}
@@ -644,10 +644,10 @@ const Settings: React.FC = () => {
           bottom: '24px',
           left: '50%',
           transform: 'translateX(-50%)',
-          backgroundColor: '#27ae60',
-          color: 'white',
+          backgroundColor: 'var(--accent)',
+          color: 'var(--ink)',
           padding: '12px 24px',
-          borderRadius: '8px',
+          borderRadius: '0',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           zIndex: 1001,
           fontWeight: 500
@@ -671,17 +671,18 @@ const Settings: React.FC = () => {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--accent)',
+            borderRadius: '0',
             padding: '24px',
             maxWidth: '400px',
             width: '90%',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
           }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#374151' }}>
+            <h3 style={{ margin: '0 0 16px 0', color: 'var(--text)' }}>
               {confirmDialog.title}
             </h3>
-            <p style={{ margin: '0 0 24px 0', color: '#6b7280', lineHeight: '1.5' }}>
+            <p style={{ margin: '0 0 24px 0', color: 'var(--dim)', lineHeight: '1.5' }}>
               {confirmDialog.message}
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>

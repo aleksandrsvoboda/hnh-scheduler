@@ -71,7 +71,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
+          # windows-latest moved to VS 2026, which the node-gyp in Node 18 cannot find (extract-file-icon fails to build)
+          - os: windows-2022
             platform: win32
           - os: macos-latest
             platform: darwin

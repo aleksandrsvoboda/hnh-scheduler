@@ -65,11 +65,9 @@ body {
   height: 100vh;
 }
 
-/* Header Container - Single continuous gradient */
+/* Header Container - dark teal gradient, like the updater's title strip */
 .header-container {
-  background:
-    linear-gradient(to bottom, rgba(12, 17, 17, 0.55), rgba(12, 17, 17, 0.88)),
-    url('./images/nurgling-art.jpg') center 38% / cover;
+  background: linear-gradient(to bottom, #2a3a3e 0%, #243236 45%, var(--surface) 100%);
   border-bottom: 1px solid var(--accent);
   box-shadow: none;
   position: relative;

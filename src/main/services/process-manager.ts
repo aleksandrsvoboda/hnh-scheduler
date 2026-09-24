@@ -230,6 +230,16 @@ export class ProcessManager extends EventEmitter {
   private setupLogging(run: ProcessRun): void {
     const { process: childProcess, runId } = run;
 
+    // Killing the client with taskkill /T /F breaks these pipes mid-write. Without a
+    // listener the stream's 'error' event is thrown as an uncaught exception.
+    for (const stream of [childProcess.stdout, childProcess.stderr, childProcess.stdin]) {
+      stream?.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code !== 'EPIPE' && error.code !== 'ERR_STREAM_DESTROYED') {
+          console.warn(`[ProcessManager] stdio error for run ${runId}:`, error.message);
+        }
+      });
+    }
+
     if (childProcess.stdout) {
       childProcess.stdout.on('data', (data: Buffer) => {
         const lines = data.toString().split('\n');

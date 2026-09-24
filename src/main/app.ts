@@ -613,11 +613,31 @@ app.on('before-quit', async () => {
   await hnhApp.cleanup();
 });
 
-// Handle uncaught exceptions
+// When the app is started by another program (the Nurgling updater, say), its stdout and
+// stderr are pipes that nobody reads. Once such a pipe fills up or its reader exits, every
+// console write fails. Swallow those errors: otherwise the failed write throws, the handler
+// below logs it, that log fails too, and the app spins on a full core, running nothing.
+for (const stream of [process.stdout, process.stderr]) {
+  stream.on('error', () => { /* broken pipe: there is nowhere to report this */ });
+}
+
+// Handle uncaught exceptions. Logging here must never throw, or we loop forever.
+let loggingFailed = false;
+const logSafely = (...args: unknown[]) => {
+  if (loggingFailed) {
+    return;
+  }
+  try {
+    console.error(...args);
+  } catch {
+    loggingFailed = true;
+  }
+};
+
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
+  logSafely('Uncaught exception:', error);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  logSafely('Unhandled rejection at:', promise, 'reason:', reason);
 });
